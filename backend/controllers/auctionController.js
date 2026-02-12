@@ -6,7 +6,12 @@ const Transaction = require('../models/Transaction');
 let activeAuction = {
   playerId: null,
   timer: null,
-  endTime: null
+  endTime: null,
+  auctionCode: null // Store temporary code
+};
+
+const generateCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
 };
 
 // Internal function to handle auction end (sold)
@@ -25,23 +30,18 @@ const endAuctionInternal = async (io, playerId) => {
     const { highest_bidder_id, current_bid, id: sessionId } = session;
 
     if (highest_bidder_id) {
-      // Deduct budget
-      // Note: No transaction in single mongo query easily without session, but good enough for MVP
       await TeamOwner.findByIdAndUpdate(highest_bidder_id, { $inc: { budget: -current_bid } });
       
-      // Update Player Status
       await Player.findByIdAndUpdate(playerId, { 
           is_sold: true, 
           sold_price: current_bid, 
           team_id: highest_bidder_id 
       });
       
-      // Update Session Status
       session.status = 'COMPLETED';
       session.end_time = Date.now();
       await session.save();
 
-      // Record Transaction
       await Transaction.create({
           team_id: highest_bidder_id,
           player_id: playerId,
@@ -58,7 +58,6 @@ const endAuctionInternal = async (io, playerId) => {
       });
       console.log(`Player ${playerId} sold to team ${highest_bidder_id} for ${current_bid}`);
     } else {
-       // Unsold
        session.status = 'UNSOLD';
        session.end_time = Date.now();
        await session.save();
@@ -70,66 +69,94 @@ const endAuctionInternal = async (io, playerId) => {
        console.log(`Player ${playerId} unsold`);
     }
 
-    // Clear active auction
-    activeAuction = {
-      playerId: null,
-      timer: null,
-      endTime: null
-    };
+    // Important: Do not clear 'auctionCode' here, admin keeps same code for session? 
+    // Usually auction lasts for multiple players. 
+    // Let's keep code persistent until admin explicitly stops/resets or server restarts for simplicity.
+    // Or better: Is the code per-player or per-session? Usually per session.
+    // Let's assume the code is for the *event*.
+    // But here activeAuction is reset. Let's make auctionCode global or persistent.
+    
+    // We will ONLY clear player-specific state.
+    activeAuction.playerId = null; 
+    activeAuction.timer = null;
+    activeAuction.endTime = null;
 
   } catch (error) {
     console.error("Error ending auction:", error);
   }
 };
 
-// Start Auction for a player
+// Start Auction (Admin Generates Code First or just starts directly?)
+// Modified: Admin "Opens" the room first? 
+// Current flow: Admin picks player -> Start.
+// Let's add an explicit "Create Room" step or just generate code on first player start.
+// Better: Admin usually starts the event.
+// Let's keep existing flow: Start Player -> Generates Code if not exists.
+
 exports.startAuction = async (req, res) => {
   const { playerId } = req.body;
   const io = req.app.get('socketio');
 
   try {
-    // Check if player exists and is unsold
+    // Generate code if not exists for this runtime
+    if (!activeAuction.auctionCode) {
+        activeAuction.auctionCode = generateCode();
+    }
+
     const player = await Player.findOne({ _id: playerId, is_sold: false });
     if (!player) return res.status(400).json({ message: 'Player not found or already sold' });
 
     const initialBid = player.base_price;
 
-    // Create auction session
     await AuctionSession.create({
         player_id: playerId,
         current_bid: initialBid,
         status: 'ONGOING',
     });
 
-    // Set auction state
     if (activeAuction.timer) clearTimeout(activeAuction.timer);
     
     activeAuction.playerId = playerId;
-    // 30 seconds from now
     const duration = 30000;
     activeAuction.endTime = Date.now() + duration;
 
-    // Start server-side timer
     activeAuction.timer = setTimeout(() => {
         endAuctionInternal(io, playerId);
     }, duration);
 
-    // Broadcast
     io.emit('auction_update', {
       type: 'START',
       payload: {
         player,
         currentBid: initialBid,
         highestBidderId: null,
-        endTime: activeAuction.endTime
+        endTime: activeAuction.endTime,
+        auctionCode: activeAuction.auctionCode // Broadcast code to admin? No, return in response
       }
     });
 
-    res.json({ message: 'Auction started', player, endTime: activeAuction.endTime });
+    res.json({ 
+        message: 'Auction started', 
+        player, 
+        endTime: activeAuction.endTime,
+        auctionCode: activeAuction.auctionCode 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
+};
+
+// Join Auction (Verify Code)
+exports.joinAuction = async (req, res) => {
+    const { code } = req.body;
+    if (!activeAuction.auctionCode) {
+        return res.status(400).json({ message: 'No active auction event found. Admin must start one.' });
+    }
+    if (code === activeAuction.auctionCode) {
+        return res.json({ success: true, message: 'Joined successfully' });
+    }
+    return res.status(400).json({ message: 'Invalid Auction Code' });
 };
 
 // Place Bid
@@ -137,10 +164,9 @@ exports.placeBid = async (req, res) => {
   const { teamId, amount } = req.body;
   const io = req.app.get('socketio');
 
-  if (!activeAuction.playerId) return res.status(400).json({ message: 'No active auction' });
+  if (!activeAuction.playerId) return res.status(400).json({ message: 'No active player on auction' });
 
   try {
-    // Validate team and budget
     const team = await TeamOwner.findById(teamId);
     if (!team) return res.status(404).json({ message: 'Team not found' });
     
@@ -148,7 +174,6 @@ exports.placeBid = async (req, res) => {
       return res.status(400).json({ message: 'Insufficient budget', currentBudget: team.budget });
     }
 
-    // Get current session
     const session = await AuctionSession.findOne({ player_id: activeAuction.playerId, status: 'ONGOING' }).sort({ createdAt: -1 });
 
     if (!session) return res.status(400).json({ message: 'Auction session not found' });
@@ -158,12 +183,10 @@ exports.placeBid = async (req, res) => {
       return res.status(400).json({ message: 'Bid must be higher than current bid' });
     }
 
-    // Update session
     session.current_bid = amount;
     session.highest_bidder_id = teamId;
     await session.save();
 
-    // Reset Timer
     if (activeAuction.timer) clearTimeout(activeAuction.timer);
     
     const duration = 30000;
@@ -172,7 +195,6 @@ exports.placeBid = async (req, res) => {
         endAuctionInternal(io, activeAuction.playerId);
     }, duration);
 
-    // Broadcast
     io.emit('auction_update', {
       type: 'BID',
       payload: {
@@ -192,7 +214,6 @@ exports.placeBid = async (req, res) => {
   }
 };
 
-// Manual Stop (Admin)
 exports.stopAuction = async (req, res) => {
    const io = req.app.get('socketio');
    if (activeAuction.timer) {
@@ -203,8 +224,8 @@ exports.stopAuction = async (req, res) => {
    res.status(400).json({ message: 'No active auction to stop' });
 };
 
-// Get current auction state (for new connections)
 exports.getAuctionState = async (req, res) => {
+    // Return code status essentially (is event active?)
     if (activeAuction.playerId) {
         const player = await Player.findById(activeAuction.playerId);
         const session = await AuctionSession.findOne({ player_id: activeAuction.playerId, status: 'ONGOING' }).sort({ createdAt: -1 });
@@ -212,6 +233,7 @@ exports.getAuctionState = async (req, res) => {
         if (player && session) {
             return res.json({
                 active: true,
+                eventActive: true,
                 player: player,
                 currentBid: session.current_bid,
                 highestBidderId: session.highest_bidder_id,
@@ -219,5 +241,9 @@ exports.getAuctionState = async (req, res) => {
             });
         }
     }
-    res.json({ active: false });
+    // If just code is active but no player
+    if (activeAuction.auctionCode) {
+        return res.json({ active: false, eventActive: true });
+    }
+    res.json({ active: false, eventActive: false });
 };

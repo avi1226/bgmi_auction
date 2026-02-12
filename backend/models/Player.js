@@ -14,12 +14,12 @@ const PlayerSchema = new mongoose.Schema({
   sold_price: { type: Number, default: 0 },
   team_id: { type: mongoose.Schema.Types.ObjectId, ref: 'TeamOwner', default: null },
   base_price: { type: Number, default: 50000.00 },
-}, { timestamps: true });
+}, { timestamps: true, id: true }); // Enable virtual id
 
 PlayerSchema.set('toJSON', {
     virtuals: true,
     transform: (doc, ret) => {
-        ret.id = ret._id;
+        ret.id = ret._id.toString();
         delete ret._id;
         delete ret.__v;
         return ret;

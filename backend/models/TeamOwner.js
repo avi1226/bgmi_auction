@@ -6,12 +6,12 @@ const TeamOwnerSchema = new mongoose.Schema({
   team_name: { type: String, required: true, unique: true },
   team_logo: { type: String },
   budget: { type: Number, default: 10000000.00 },
-}, { timestamps: true });
+}, { timestamps: true, id: true });
 
 TeamOwnerSchema.set('toJSON', {
     virtuals: true,
     transform: (doc, ret) => {
-        ret.id = ret._id;
+        ret.id = ret._id.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
