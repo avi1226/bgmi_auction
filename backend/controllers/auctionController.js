@@ -108,6 +108,9 @@ exports.startAuction = async (req, res) => {
 
     const initialBid = player.base_price;
 
+    // Cancel any existing ONGOING sessions to prevent zombies
+    await AuctionSession.updateMany({ status: 'ONGOING' }, { status: 'CANCELLED', end_time: Date.now() });
+
     await AuctionSession.create({
         player_id: playerId,
         current_bid: initialBid,

@@ -23,9 +23,11 @@ const AdminDashboard = () => {
     const startAuction = async (playerId) => {
         try {
             const { data } = await api.post('/auction/start', { playerId });
-            alert(`Auction Started! Code: ${data.auctionCode}`);
             setActiveAuctionCode(data.auctionCode);
+            // Optional: Scroll to top to see code
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
+            console.error("Auction Start Error:", error);
             alert(error.response?.data?.message || 'Failed to start auction');
         }
     };
