@@ -1,11 +1,12 @@
 -- Database Schema for BGMI Player Auction System
 
-CREATE DATABASE IF NOT EXISTS bgmi_auction_db;
+DROP DATABASE IF EXISTS bgmi_auction_db;
+CREATE DATABASE bgmi_auction_db;
 
 USE bgmi_auction_db;
 
 -- Admins Table
-CREATE TABLE IF NOT EXISTS admins (
+CREATE TABLE admins (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -13,7 +14,7 @@ CREATE TABLE IF NOT EXISTS admins (
 );
 
 -- Team Owners Table
-CREATE TABLE IF NOT EXISTS team_owners (
+CREATE TABLE team_owners (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS team_owners (
 );
 
 -- Players Table
-CREATE TABLE IF NOT EXISTS players (
+CREATE TABLE players (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS players (
 );
 
 -- Auction Sessions Table (Manage live auction state)
-CREATE TABLE IF NOT EXISTS auction_sessions (
+CREATE TABLE auction_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     player_id INT NOT NULL,
     current_bid DECIMAL(10, 2) DEFAULT 0.00,
@@ -57,7 +58,7 @@ CREATE TABLE IF NOT EXISTS auction_sessions (
 );
 
 -- Transaction History Table
-CREATE TABLE IF NOT EXISTS transactions (
+CREATE TABLE transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     team_id INT NOT NULL,
     player_id INT NOT NULL,
@@ -67,16 +68,16 @@ CREATE TABLE IF NOT EXISTS transactions (
     FOREIGN KEY (player_id) REFERENCES players(id)
 );
 
--- SEED DATA (Password for all is '123456' hashed or plain text if testing without hash check)
--- Ideally use the seed.js script, but here is a manual fallback if needed.
--- Note: Passwords below are hashes for 'admin123', 'team123', 'player123'
+-- SEED DATA 
+-- Passwords are generated using bcrypt
+
 INSERT INTO admins (username, password) VALUES 
-('admin', '$2a$10$X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7'); 
+('admin', '$2b$10$jc1bDJAH8MvBbjGJOKYWfOhoJqjr6C8fOmtU.TVaVQAOrpJeZ7cT6'); -- admin123 
 
 INSERT INTO team_owners (username, password, team_name, budget) VALUES 
-('soul_owner', '$2a$10$X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7', 'Soul Esports', 10000000.00),
-('godl_owner', '$2a$10$X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7', 'GodLike', 10000000.00);
+('soul_owner', '$2b$10$N4h7rP5BRXkPOODg5iQgju7eLOMPIFqRFHbjbtMX89FwKihUP6ere', 'Soul Esports', 10000000.00), -- team123
+('godl_owner', '$2b$10$N4h7rP5BRXkPOODg5iQgju7eLOMPIFqRFHbjbtMX89FwKihUP6ere', 'GodLike', 10000000.00); -- team123
 
 INSERT INTO players (username, password, name, role, tier, kd_ratio, experience_years, video_link) VALUES 
-('jonathan', '$2a$10$X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7', 'Jonathan', 'Assaulter', 'Conqueror', 6.5, 4, 'https://www.youtube.com/watch?v=ScMzIvxBSi4'),
-('mortal', '$2a$10$X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7.X.X7', 'Mortal', 'IGL', 'Ace Master', 4.2, 5, 'https://www.youtube.com/watch?v=ScMzIvxBSi4');
+('jonathan', '$2b$10$xqIWIbq/4c0XmPqudA/Lqudn/CeY/vIQrtZMNkB1MxbBnZovnoiBi', 'Jonathan', 'Assaulter', 'Conqueror', 6.5, 4, 'https://www.youtube.com/watch?v=ScMzIvxBSi4'), -- player123
+('mortal', '$2b$10$xqIWIbq/4c0XmPqudA/Lqudn/CeY/vIQrtZMNkB1MxbBnZovnoiBi', 'Mortal', 'IGL', 'Ace Master', 4.2, 5, 'https://www.youtube.com/watch?v=ScMzIvxBSi4'); -- player123
