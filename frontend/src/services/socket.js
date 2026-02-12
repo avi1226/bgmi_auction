@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:5005', {
+// Hardcoded for stability
+const socket = io('http://localhost:5006', {
   autoConnect: false,
   withCredentials: true,
 });
