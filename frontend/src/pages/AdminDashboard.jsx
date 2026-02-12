@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Users, Timer, Activity, Shield_Check } from 'lucide-react';
+import { Users, Timer, Activity, ShieldCheck } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { user } = useAuth();
@@ -58,7 +58,7 @@ const AdminDashboard = () => {
                  <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                      <div className="flex items-center justify-between">
                          <h3 className="text-gray-400 uppercase text-xs font-bold">Sold Players</h3>
-                         <Shield_Check className="w-5 h-5 text-green-400" />
+                         <ShieldCheck className="w-5 h-5 text-green-400" />
                      </div>
                      <div className="text-4xl font-black text-white mt-4">{players.filter(p => p.is_sold).length}</div>
                  </div>
