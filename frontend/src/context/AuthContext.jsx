@@ -12,15 +12,30 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check local storage on load
-    const token = localStorage.getItem('token');
-    const storedRole = localStorage.getItem('role');
-    const storedUser = localStorage.getItem('user');
+    try {
+        const token = localStorage.getItem('token');
+        const storedRole = localStorage.getItem('role');
+        const storedUser = localStorage.getItem('user');
 
-    if (token && storedUser) {
-      setUser(JSON.parse(storedUser));
-      setRole(storedRole);
+        if (token && storedUser) {
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                if (parsedUser) {
+                    setUser(parsedUser);
+                    setRole(storedRole);
+                }
+            } catch (e) {
+                console.error("Failed to parse stored user, clearing storage", e);
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                localStorage.removeItem('user');
+            }
+        }
+    } catch (e) {
+        console.error("Auth initialization error:", e);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = async (roleType, credentials) => {
@@ -64,7 +79,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, role, login, logout, register, loading }}>
-      {!loading && children}
+      {!loading ? children : <div className="flex justify-center items-center h-screen bg-gray-900 text-white">Loading...</div>}
     </AuthContext.Provider>
   );
 };
