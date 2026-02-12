@@ -1,8 +1,8 @@
-const pool = require('../config/db');
+const TeamOwner = require('../models/TeamOwner');
 
 exports.getAllTeams = async (req, res) => {
   try {
-    const [teams] = await pool.query('SELECT * FROM team_owners');
+    const teams = await TeamOwner.find();
     res.json(teams);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -11,9 +11,9 @@ exports.getAllTeams = async (req, res) => {
 
 exports.getTeamById = async (req, res) => {
   try {
-    const [teams] = await pool.query('SELECT * FROM team_owners WHERE id = ?', [req.params.id]);
-    if (teams.length === 0) return res.status(404).json({ message: 'Team not found' });
-    res.json(teams[0]);
+    const team = await TeamOwner.findById(req.params.id);
+    if (!team) return res.status(404).json({ message: 'Team not found' });
+    res.json(team);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

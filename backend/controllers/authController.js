@@ -1,16 +1,29 @@
-const pool = require('../config/db');
+const Admin = require('../models/Admin');
+const TeamOwner = require('../models/TeamOwner');
+const Player = require('../models/Player');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 exports.registerPlayer = async (req, res) => {
   const { username, password, name, role, tier, kd_ratio, experience_years, tournament_history, video_link } = req.body;
   try {
+    const existing = await Player.findOne({ username });
+    if(existing) return res.status(400).json({ message: 'Username taken' });
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await pool.query(
-      'INSERT INTO players (username, password, name, role, tier, kd_ratio, experience_years, tournament_history, video_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [username, hashedPassword, name, role, tier, kd_ratio, experience_years, tournament_history, video_link]
-    );
-    res.status(201).json({ message: 'Player registered successfully', playerId: result.insertId });
+    const player = await Player.create({
+        username, 
+        password: hashedPassword, 
+        name, 
+        role, 
+        tier, 
+        kd_ratio, 
+        experience_years, 
+        tournament_history, 
+        video_link
+    });
+    
+    res.status(201).json({ message: 'Player registered successfully', playerId: player.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -19,10 +32,9 @@ exports.registerPlayer = async (req, res) => {
 exports.loginPlayer = async (req, res) => {
   const { username, password } = req.body;
   try {
-    const [rows] = await pool.query('SELECT * FROM players WHERE username = ?', [username]);
-    if (rows.length === 0) return res.status(401).json({ message: 'Invalid credentials' });
+    const player = await Player.findOne({ username });
+    if (!player) return res.status(401).json({ message: 'Invalid credentials' });
     
-    const player = rows[0];
     const isMatch = await bcrypt.compare(password, player.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -36,12 +48,18 @@ exports.loginPlayer = async (req, res) => {
 exports.registerTeamOwner = async (req, res) => {
   const { username, password, team_name, team_logo } = req.body;
   try {
+    const existing = await TeamOwner.findOne({ username });
+    if(existing) return res.status(400).json({ message: 'Username taken' });
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await pool.query(
-      'INSERT INTO team_owners (username, password, team_name, team_logo) VALUES (?, ?, ?, ?)',
-      [username, hashedPassword, team_name, team_logo]
-    );
-    res.status(201).json({ message: 'Team Owner registered successfully', ownerId: result.insertId });
+    const owner = await TeamOwner.create({
+        username, 
+        password: hashedPassword, 
+        team_name, 
+        team_logo
+    });
+
+    res.status(201).json({ message: 'Team Owner registered successfully', ownerId: owner.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -50,10 +68,9 @@ exports.registerTeamOwner = async (req, res) => {
 exports.loginTeamOwner = async (req, res) => {
   const { username, password } = req.body;
   try {
-    const [rows] = await pool.query('SELECT * FROM team_owners WHERE username = ?', [username]);
-    if (rows.length === 0) return res.status(401).json({ message: 'Invalid credentials' });
+    const owner = await TeamOwner.findOne({ username });
+    if (!owner) return res.status(401).json({ message: 'Invalid credentials' });
     
-    const owner = rows[0];
     const isMatch = await bcrypt.compare(password, owner.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -67,12 +84,9 @@ exports.loginTeamOwner = async (req, res) => {
 exports.loginAdmin = async (req, res) => {
   const { username, password } = req.body;
   try {
-    const [rows] = await pool.query('SELECT * FROM admins WHERE username = ?', [username]);
-    if (rows.length === 0) return res.status(401).json({ message: 'Invalid credentials' });
+    const admin = await Admin.findOne({ username });
+    if (!admin) return res.status(401).json({ message: 'Invalid credentials' });
     
-    const admin = rows[0];
-    // For simplicity, plain text check for initial admin seed, but hash check normally
-    // Assuming seeded admin uses bcrypt too as per schema seed comment
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 

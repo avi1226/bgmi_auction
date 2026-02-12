@@ -1,6 +1,8 @@
-const pool = require('../config/db');
+const Player = require('../models/Player');
+const TeamOwner = require('../models/TeamOwner');
+const AuctionSession = require('../models/AuctionSession');
+const Transaction = require('../models/Transaction');
 
-// In-memory state for active auction (for simplicity in MVP)
 let activeAuction = {
   playerId: null,
   timer: null,
@@ -12,33 +14,39 @@ const endAuctionInternal = async (io, playerId) => {
   try {
     console.log(`Ending auction for player ${playerId}`);
     
-    // Get final state
-    // We need to fetch the LATEST session for this player that was ONGOING.
-    const [sessions] = await pool.query(
-      'SELECT * FROM auction_sessions WHERE player_id = ? AND status = "ONGOING" ORDER BY id DESC LIMIT 1',
-      [playerId]
-    );
+    // Get final state - ONGOING session
+    const session = await AuctionSession.findOne({ player_id: playerId, status: 'ONGOING' }).sort({ createdAt: -1 });
 
-    if (sessions.length === 0) {
+    if (!session) {
         console.log("No ongoing session found to end.");
         return; 
     }
 
-    const session = sessions[0];
     const { highest_bidder_id, current_bid, id: sessionId } = session;
 
     if (highest_bidder_id) {
       // Deduct budget
-      await pool.query('UPDATE team_owners SET budget = budget - ? WHERE id = ?', [current_bid, highest_bidder_id]);
+      // Note: No transaction in single mongo query easily without session, but good enough for MVP
+      await TeamOwner.findByIdAndUpdate(highest_bidder_id, { $inc: { budget: -current_bid } });
       
       // Update Player Status
-      await pool.query('UPDATE players SET is_sold = 1, sold_price = ?, team_id = ? WHERE id = ?', [current_bid, highest_bidder_id, playerId]);
+      await Player.findByIdAndUpdate(playerId, { 
+          is_sold: true, 
+          sold_price: current_bid, 
+          team_id: highest_bidder_id 
+      });
       
       // Update Session Status
-      await pool.query('UPDATE auction_sessions SET status = "COMPLETED", end_time = NOW() WHERE id = ?', [sessionId]);
+      session.status = 'COMPLETED';
+      session.end_time = Date.now();
+      await session.save();
 
       // Record Transaction
-      await pool.query('INSERT INTO transactions (team_id, player_id, amount) VALUES (?, ?, ?)', [highest_bidder_id, playerId, current_bid]);
+      await Transaction.create({
+          team_id: highest_bidder_id,
+          player_id: playerId,
+          amount: current_bid
+      });
 
       io.emit('auction_update', {
         type: 'SOLD',
@@ -51,7 +59,10 @@ const endAuctionInternal = async (io, playerId) => {
       console.log(`Player ${playerId} sold to team ${highest_bidder_id} for ${current_bid}`);
     } else {
        // Unsold
-       await pool.query('UPDATE auction_sessions SET status = "UNSOLD", end_time = NOW() WHERE id = ?', [sessionId]);
+       session.status = 'UNSOLD';
+       session.end_time = Date.now();
+       await session.save();
+
        io.emit('auction_update', {
          type: 'UNSOLD',
          payload: { playerId }
@@ -74,22 +85,21 @@ const endAuctionInternal = async (io, playerId) => {
 // Start Auction for a player
 exports.startAuction = async (req, res) => {
   const { playerId } = req.body;
-  // Access io from app (passed via req)
   const io = req.app.get('socketio');
 
   try {
     // Check if player exists and is unsold
-    const [players] = await pool.query('SELECT * FROM players WHERE id = ? AND is_sold = 0', [playerId]);
-    if (players.length === 0) return res.status(400).json({ message: 'Player not found or already sold' });
+    const player = await Player.findOne({ _id: playerId, is_sold: false });
+    if (!player) return res.status(400).json({ message: 'Player not found or already sold' });
 
-    const player = players[0];
     const initialBid = player.base_price;
 
     // Create auction session
-    await pool.query(
-      'INSERT INTO auction_sessions (player_id, current_bid, status, start_time) VALUES (?, ?, "ONGOING", NOW())',
-      [playerId, initialBid]
-    );
+    await AuctionSession.create({
+        player_id: playerId,
+        current_bid: initialBid,
+        status: 'ONGOING',
+    });
 
     // Set auction state
     if (activeAuction.timer) clearTimeout(activeAuction.timer);
@@ -127,40 +137,31 @@ exports.placeBid = async (req, res) => {
   const { teamId, amount } = req.body;
   const io = req.app.get('socketio');
 
-  // Check if auction is active for ANY player (simplified single auction room)
-  // In a real app we'd check req.body.playerId matches activeAuction.playerId
   if (!activeAuction.playerId) return res.status(400).json({ message: 'No active auction' });
 
   try {
     // Validate team and budget
-    const [teams] = await pool.query('SELECT * FROM team_owners WHERE id = ?', [teamId]);
-    if (teams.length === 0) return res.status(404).json({ message: 'Team not found' });
+    const team = await TeamOwner.findById(teamId);
+    if (!team) return res.status(404).json({ message: 'Team not found' });
     
-    const team = teams[0];
-    if (parseFloat(team.budget) < parseFloat(amount)) {
+    if (team.budget < amount) {
       return res.status(400).json({ message: 'Insufficient budget', currentBudget: team.budget });
     }
 
     // Get current session
-    const [sessions] = await pool.query(
-      'SELECT * FROM auction_sessions WHERE player_id = ? AND status = "ONGOING" ORDER BY id DESC LIMIT 1',
-      [activeAuction.playerId]
-    );
+    const session = await AuctionSession.findOne({ player_id: activeAuction.playerId, status: 'ONGOING' }).sort({ createdAt: -1 });
 
-    if (sessions.length === 0) return res.status(400).json({ message: 'Auction session not found' });
+    if (!session) return res.status(400).json({ message: 'Auction session not found' });
 
-    const currentBid = parseFloat(sessions[0].current_bid);
-    // Bid must be strictly greater than current bid? Or equal if no bids?
-    // Usually strict increase.
-    if (parseFloat(amount) <= currentBid) {
+    const currentBid = session.current_bid;
+    if (amount <= currentBid) {
       return res.status(400).json({ message: 'Bid must be higher than current bid' });
     }
 
     // Update session
-    await pool.query(
-      'UPDATE auction_sessions SET current_bid = ?, highest_bidder_id = ? WHERE id = ?',
-      [amount, teamId, sessions[0].id]
-    );
+    session.current_bid = amount;
+    session.highest_bidder_id = teamId;
+    await session.save();
 
     // Reset Timer
     if (activeAuction.timer) clearTimeout(activeAuction.timer);
@@ -205,16 +206,15 @@ exports.stopAuction = async (req, res) => {
 // Get current auction state (for new connections)
 exports.getAuctionState = async (req, res) => {
     if (activeAuction.playerId) {
-        // Fetch details
-        const [players] = await pool.query('SELECT * FROM players WHERE id = ?', [activeAuction.playerId]);
-        const [sessions] = await pool.query('SELECT * FROM auction_sessions WHERE player_id = ? AND status = "ONGOING" ORDER BY id DESC LIMIT 1', [activeAuction.playerId]);
+        const player = await Player.findById(activeAuction.playerId);
+        const session = await AuctionSession.findOne({ player_id: activeAuction.playerId, status: 'ONGOING' }).sort({ createdAt: -1 });
         
-        if (players.length > 0 && sessions.length > 0) {
+        if (player && session) {
             return res.json({
                 active: true,
-                player: players[0],
-                currentBid: sessions[0].current_bid,
-                highestBidderId: sessions[0].highest_bidder_id,
+                player: player,
+                currentBid: session.current_bid,
+                highestBidderId: session.highest_bidder_id,
                 endTime: activeAuction.endTime
             });
         }
