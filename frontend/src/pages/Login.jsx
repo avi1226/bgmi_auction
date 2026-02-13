@@ -16,7 +16,13 @@ const Login = () => {
     setError('');
     const result = await login(role, { username, password });
     if (result.success) {
-      navigate('/auction');
+      if (role === 'player') {
+        navigate('/player/dashboard');
+      } else if (role === 'team_owner') {
+        navigate('/team/dashboard');
+      } else if (role === 'admin') {
+        navigate('/admin/dashboard');
+      }
     } else {
       setError(result.message);
     }
