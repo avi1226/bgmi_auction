@@ -38,7 +38,24 @@ const PlayerDashboard = () => {
                         <h1 className="text-5xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
                             {player.name}
                         </h1>
-                        <p className="text-gray-400 font-mono tracking-widest text-sm mt-1 uppercase">Pro Player Profile</p>
+                        <p className="text-gray-400 font-mono tracking-widest text-sm mt-1 uppercase mb-2">Pro Player Profile</p>
+                        
+                        {/* Verification Status */}
+                        {(player.verification_status || 'PENDING') === 'PENDING' && (
+                            <span className="bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
+                                Pending Approval
+                            </span>
+                        )}
+                        {(player.verification_status) === 'VERIFIED' && (
+                            <span className="bg-green-500/20 text-green-500 border border-green-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                Verified
+                            </span>
+                        )}
+                        {(player.verification_status) === 'REJECTED' && (
+                            <span className="bg-red-500/20 text-red-500 border border-red-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                Application Rejected
+                            </span>
+                        )}
                     </div>
                 </div>
 

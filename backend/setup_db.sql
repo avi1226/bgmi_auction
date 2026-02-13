@@ -40,6 +40,7 @@ CREATE TABLE players (
     sold_price DECIMAL(10, 2) DEFAULT 0,
     team_id INT,
     base_price DECIMAL(10, 2) DEFAULT 50000.00,
+    verification_status ENUM('PENDING', 'VERIFIED', 'REJECTED') DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (team_id) REFERENCES team_owners(id) ON DELETE SET NULL
 );
