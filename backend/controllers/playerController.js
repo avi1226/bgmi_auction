@@ -2,7 +2,7 @@ const Player = require('../models/Player');
 
 exports.getAllPlayers = async (req, res) => {
   try {
-    const players = await Player.find();
+    const players = await Player.find().populate('team_id');
     res.json(players);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -11,7 +11,7 @@ exports.getAllPlayers = async (req, res) => {
 
 exports.getPlayerById = async (req, res) => {
   try {
-    const player = await Player.findById(req.params.id);
+    const player = await Player.findById(req.params.id).populate('team_id');
     if (!player) return res.status(404).json({ message: 'Player not found' });
     res.json(player);
   } catch (error) {

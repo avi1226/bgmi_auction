@@ -10,6 +10,7 @@ const PlayerSchema = new mongoose.Schema({
   experience_years: { type: Number, required: true },
   tournament_history: { type: String },
   video_link: { type: String },
+  profile_image: { type: String },
   is_sold: { type: Boolean, default: false },
   sold_price: { type: Number, default: 0 },
   team_id: { type: mongoose.Schema.Types.ObjectId, ref: 'TeamOwner', default: null },
