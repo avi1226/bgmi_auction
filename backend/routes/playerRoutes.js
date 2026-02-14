@@ -4,8 +4,23 @@ const playerController = require('../controllers/playerController');
 
 router.get('/', playerController.getAllPlayers);
 router.get('/:id', playerController.getPlayerById);
+const multer = require('multer');
+const path = require('path');
+
+// Configure Multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+
 // Update player
-router.put('/:id', playerController.updatePlayer);
+router.put('/:id', upload.single('profile_image'), playerController.updatePlayer);
 
 // Verify player endpoint
 router.put('/:id/verify', playerController.verifyPlayer);

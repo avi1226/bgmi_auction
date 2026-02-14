@@ -21,6 +21,16 @@ exports.getPlayerById = async (req, res) => {
 
 exports.updatePlayer = async (req, res) => {
   try {
+// Construct full URL if file uploaded
+    if (req.file) {
+        // Assuming server runs on localhost or a known domain. 
+        // For simplicity, we can use relative path '/uploads/filename'
+        // But let's try to construct a full URL for consistency with external links
+        const protocol = req.protocol;
+        const host = req.get('host');
+        req.body.profile_image = `${protocol}://${host}/uploads/${req.file.filename}`;
+    }
+
     const player = await Player.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!player) return res.status(404).json({ message: 'Player not found' });
     res.json(player);

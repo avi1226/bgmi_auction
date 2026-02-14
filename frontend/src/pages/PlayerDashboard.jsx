@@ -10,6 +10,8 @@ const PlayerDashboard = () => {
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
 
     useEffect(() => {
         if (player) {
@@ -22,14 +24,39 @@ const PlayerDashboard = () => {
                 video_link: player.video_link,
                 profile_image: player.profile_image
             });
+            setPreviewUrl(player.profile_image);
         }
     }, [player]);
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
 
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            const { data } = await api.put(`/players/${player.id}`, formData);
-            setPlayer(data);
+            const data = new FormData();
+            Object.keys(formData).forEach(key => {
+                if (key !== 'profile_image') {
+                    data.append(key, formData[key]);
+                }
+            });
+
+            if (selectedFile) {
+                data.append('profile_image', selectedFile);
+            } else {
+                data.append('profile_image', formData.profile_image);
+            }
+
+            const response = await api.put(`/players/${player.id}`, data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            setPlayer(response.data);
             setIsEditing(false);
         } catch (error) {
             console.error("Failed to update profile", error);
@@ -183,14 +210,22 @@ const PlayerDashboard = () => {
                         </div>
                         <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="col-span-2">
-                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Profile Image URL</label>
-                                <input 
-                                    type="text" 
-                                    value={formData.profile_image || ''} 
-                                    onChange={e => setFormData({...formData, profile_image: e.target.value})}
-                                    placeholder="https://example.com/image.jpg"
-                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
-                                />
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Profile Image</label>
+                                <div className="flex items-center space-x-4">
+                                    <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-600 bg-gray-800">
+                                        {previewUrl ? (
+                                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="w-full h-full p-4 text-gray-500" />
+                                        )}
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white hover:file:bg-indigo-600"
+                                    />
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Name</label>
