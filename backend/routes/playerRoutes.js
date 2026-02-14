@@ -10,4 +10,7 @@ router.put('/:id', playerController.updatePlayer);
 // Verify player endpoint
 router.put('/:id/verify', playerController.verifyPlayer);
 
+// Get players by team
+router.get('/team/:teamId', playerController.getPlayersByTeam);
+
 module.exports = router;

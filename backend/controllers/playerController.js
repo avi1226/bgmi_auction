@@ -42,3 +42,12 @@ exports.verifyPlayer = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getPlayersByTeam = async (req, res) => {
+  try {
+    const players = await Player.find({ team_id: req.params.teamId }).populate('team_id');
+    res.json(players);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

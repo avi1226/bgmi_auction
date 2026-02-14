@@ -32,9 +32,8 @@ const TeamDashboard = () => {
         const fetchTeamPlayers = async () => {
             if (user?.id) {
                 try {
-                    const { data } = await api.get('/players'); // In a real app filtering should happen on backend
-                    const myPlayers = data.filter(p => p.team_id === user.id);
-                    setPlayers(myPlayers);
+                    const { data } = await api.get(`/players/team/${user.id}`);
+                    setPlayers(data);
                 } catch (error) {
                     console.error("Failed to fetch players", error);
                 }
