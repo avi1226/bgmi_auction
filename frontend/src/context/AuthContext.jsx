@@ -38,21 +38,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (roleType, credentials) => {
+  const login = async (credentials) => {
     try {
-      const endpoint = roleType === 'player' ? '/auth/login/player' :
-                       roleType === 'team_owner' ? '/auth/login/team-owner' :
-                       '/auth/login/admin';
+      const { data } = await api.post('/auth/login', credentials);
       
-      const { data } = await api.post(endpoint, credentials);
-      
+      const role = data.role;
+      const user = data[role === 'team_owner' ? 'team_owner' : role];
+
       localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
-      localStorage.setItem('user', JSON.stringify(data[roleType] || data.admin));
+      localStorage.setItem('role', role);
+      localStorage.setItem('user', JSON.stringify(user));
       
-      setUser(data[roleType] || data.admin);
-      setRole(data.role);
-      return { success: true };
+      setUser(user);
+      setRole(role);
+      return { success: true, role };
     } catch (error) {
        console.error(error);
        return { success: false, message: error.response?.data?.message || 'Login failed' };

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const Login = () => {
-  const [role, setRole] = useState('player');
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
@@ -14,13 +14,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const result = await login(role, { username, password });
+    const result = await login({ username, password });
     if (result.success) {
-      if (role === 'player') {
+      if (result.role === 'player') {
         navigate('/player/dashboard');
-      } else if (role === 'team_owner') {
+      } else if (result.role === 'team_owner') {
         navigate('/team/dashboard');
-      } else if (role === 'admin') {
+      } else if (result.role === 'admin') {
         navigate('/admin/dashboard');
       }
     } else {
@@ -44,21 +44,7 @@ const Login = () => {
 
         {error && <div className="bg-red-500/20 text-red-500 p-3 mb-4 rounded text-center border border-red-500/50">{error}</div>}
 
-        <div className="flex justify-center space-x-4 mb-6">
-          {['player', 'team_owner', 'admin'].map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`px-4 py-2 text-sm rounded-full transition-all duration-300 ${
-                role === r 
-                  ? 'bg-esports-accent text-white shadow-lg scale-105 ring-2 ring-indigo-400' 
-                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-              }`}
-            >
-              {r.replace('_', ' ').toUpperCase()}
-            </button>
-          ))}
-        </div>
+
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

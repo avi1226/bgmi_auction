@@ -96,3 +96,44 @@ exports.loginAdmin = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.login = async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    // 1. Check Admin
+    const admin = await Admin.findOne({ username });
+    if (admin) {
+      const isMatch = await bcrypt.compare(password, admin.password);
+      if (isMatch) {
+        const token = jwt.sign({ id: admin.id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        return res.json({ token, role: 'admin', admin });
+      }
+    }
+
+    // 2. Check Team Owner
+    const owner = await TeamOwner.findOne({ username });
+    if (owner) {
+      const isMatch = await bcrypt.compare(password, owner.password);
+      if (isMatch) {
+        const token = jwt.sign({ id: owner.id, role: 'team_owner' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        return res.json({ token, role: 'team_owner', team_owner: owner });
+      }
+    }
+
+    // 3. Check Player
+    const player = await Player.findOne({ username });
+    if (player) {
+      const isMatch = await bcrypt.compare(password, player.password);
+      if (isMatch) {
+        const token = jwt.sign({ id: player.id, role: 'player' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        return res.json({ token, role: 'player', player });
+      }
+    }
+
+    // If no match found
+    return res.status(401).json({ message: 'Invalid credentials' });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
