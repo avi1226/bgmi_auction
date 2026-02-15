@@ -8,6 +8,7 @@ const PlayerSchema = new mongoose.Schema({
   tier: { type: String, required: true },
   kd_ratio: { type: Number, required: true },
   experience_years: { type: Number, required: true },
+  dob: { type: Date },
   tournament_history: { type: String },
   video_links: { type: [String], default: [] },
   video_link: { type: String },

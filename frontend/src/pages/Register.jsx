@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 const Register = () => {
   const [role, setRole] = useState('player');
   const [formData, setFormData] = useState({
-    username: '', password: '', name: '', role: 'Assaulter', tier: 'Gold', kd_ratio: 0, experience_years: 0, tournament_history: '', video_link: '', team_name: '', team_logo: ''
+    username: '', password: '', name: '', role: 'Assaulter', tier: 'Gold', kd_ratio: 0, experience_years: 0, dob: '', tournament_history: '', video_link: '', team_name: '', team_logo: ''
   });
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -56,77 +56,87 @@ const Register = () => {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
             <div>
-              <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Username</label>
-              <input type="text" name="username" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
+              <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Username</label>
+              <input type="text" name="username" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Password</label>
-              <input type="password" name="password" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            {role === 'player' ? (
-              <>
+            
+            {role === 'player' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Full Name</label>
-                  <input type="text" name="name" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
+                  <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Full Name</label>
+                  <input type="text" name="name" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                   <div>
-                     <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Role</label>
-                     <select name="role" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent">
-                       <option value="Assaulter">Assaulter</option>
-                       <option value="Sniper">Sniper</option>
-                       <option value="IGL">IGL</option>
-                       <option value="Support">Support</option>
-                     </select>
-                   </div>
-                   <div>
-                      <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Tier</label>
-                      <select name="tier" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent">
-                        <option value="Bronze">Bronze</option>
-                        <option value="Silver">Silver</option>
-                        <option value="Gold">Gold</option>
-                        <option value="Platinum">Platinum</option>
-                        <option value="Diamond">Diamond</option>
-                        <option value="Crown">Crown</option>
-                        <option value="Ace">Ace</option>
-                        <option value="Conqueror">Conqueror</option>
-                      </select>
-                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                   <div>
-                      <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">K/D Ratio</label>
-                      <input type="number" step="0.1" name="kd_ratio" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
-                   </div>
-                   <div>
-                      <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Experience (Years)</label>
-                      <input type="number" name="experience_years" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
-                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Video Link (YouTube)</label>
-                  <input type="url" name="video_link" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" placeholder="https://youtube.com/..." />
-                </div>
-              </>
-            ) : (
-              <>
+            )}
+
+            {role === 'team_owner' && (
                  <div>
-                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Team Name</label>
-                    <input type="text" name="team_name" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
+                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Team Name</label>
+                    <input type="text" name="team_name" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
+                 </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Password</label>
+              <input type="password" name="password" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
+            </div>
+
+            {role === 'team_owner' && (
+                 <div>
+                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Team Logo (URL)</label>
+                    <input type="text" name="team_logo" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" />
+                 </div>
+            )}
+            
+            {role === 'player' && (
+              <>
+                <div>
+                   <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Role</label>
+                   <select name="role" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent">
+                     <option value="Assaulter">Assaulter</option>
+                     <option value="Sniper">Sniper</option>
+                     <option value="IGL">IGL</option>
+                     <option value="Support">Support</option>
+                   </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Tier</label>
+                    <select name="tier" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent">
+                      <option value="Bronze">Bronze</option>
+                      <option value="Silver">Silver</option>
+                      <option value="Gold">Gold</option>
+                      <option value="Platinum">Platinum</option>
+                      <option value="Diamond">Diamond</option>
+                      <option value="Crown">Crown</option>
+                      <option value="Ace">Ace</option>
+                      <option value="Conqueror">Conqueror</option>
+                    </select>
+                </div>
+                 <div>
+                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">K/D Ratio</label>
+                    <input type="number" step="0.1" name="kd_ratio" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
                  </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Team Logo (URL)</label>
-                    <input type="text" name="team_logo" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" />
+                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Experience</label>
+                    <input type="number" name="experience_years" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
+                 </div>
+                 <div>
+                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">
+                        Date of Birth 
+                        {formData.dob && (
+                            <span className="text-esports-accent ml-2">
+                                (Age: {Math.floor((new Date() - new Date(formData.dob)) / 31557600000)})
+                            </span>
+                        )}
+                    </label>
+                    <input type="date" name="dob" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent text-gray-300" required />
+                 </div>
+                 <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Video Link (YouTube)</label>
+                    <input type="url" name="video_link" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" placeholder="https://youtube.com/..." />
                  </div>
               </>
             )}
-          </div>
           
           <div className="md:col-span-2 mt-6">
              <button
