@@ -108,23 +108,60 @@ const PlayerProfile = () => {
                 </div>
             </div>
 
-            {getYouTubeEmbedUrl(player.video_link) && (
-                <div className="aspect-video w-full max-w-xl rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative">
-                     <div className="absolute top-0 left-0 bg-esports-accent text-white px-4 py-1 text-xs font-bold uppercase z-10 rounded-br-lg">
-                         Featured Gameplay
-                     </div>
-                     <iframe 
-                         width="100%" 
-                         height="500px"
-                         src={getYouTubeEmbedUrl(player.video_link)} 
-                         title="Player Gameplay" 
-                         frameBorder="0" 
-                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                         allowFullScreen
-                         className="w-full h-full object-cover"
-                     ></iframe>
-                </div>
-            )}
+            {/* Videos Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                {/* Legacy video_link support */}
+                {player.video_link && !player.video_links?.includes(player.video_link) && (
+                     <div className="aspect-video w-full max-w-xl rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative">
+                         {getYouTubeEmbedUrl(player.video_link) ? (
+                            <iframe 
+                                width="100%" 
+                                height="100%"
+                                src={getYouTubeEmbedUrl(player.video_link)} 
+                                title="Player Gameplay" 
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen
+                                className="w-full h-full object-cover"
+                            ></iframe>
+                         ) : (
+                            <video 
+                                controls
+                                className="w-full h-full object-cover"
+                                src={player.video_link}
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                         )}
+                    </div>
+                )}
+
+                {/* New video_links array support */}
+                {player.video_links && player.video_links.map((link, index) => (
+                    <div key={index} className="aspect-video w-full max-w-xl rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative">
+                         {getYouTubeEmbedUrl(link) ? (
+                            <iframe 
+                                width="100%" 
+                                height="100%"
+                                src={getYouTubeEmbedUrl(link)} 
+                                title={`Player Gameplay ${index + 1}`}
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen
+                                className="w-full h-full object-cover"
+                            ></iframe>
+                         ) : (
+                            <video 
+                                controls
+                                className="w-full h-full object-cover"
+                                src={link}
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                         )}
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };

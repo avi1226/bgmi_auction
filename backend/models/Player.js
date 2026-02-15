@@ -9,6 +9,7 @@ const PlayerSchema = new mongoose.Schema({
   kd_ratio: { type: Number, required: true },
   experience_years: { type: Number, required: true },
   tournament_history: { type: String },
+  video_links: { type: [String], default: [] },
   video_link: { type: String },
   profile_image: { type: String },
   is_sold: { type: Boolean, default: false },

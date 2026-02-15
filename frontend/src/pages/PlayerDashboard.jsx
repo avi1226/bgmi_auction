@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { User, Activity, Map, Trophy, Target } from 'lucide-react';
+import { User, Activity, Map, Trophy, Target, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getYouTubeEmbedUrl } from '../utils';
 
@@ -12,8 +12,10 @@ const PlayerDashboard = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
     const [selectedFile, setSelectedFile] = useState(null);
+    const [selectedVideo, setSelectedVideo] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
 
+    // Effect for initial loading...
     useEffect(() => {
         if (player) {
             setFormData({
@@ -29,11 +31,27 @@ const PlayerDashboard = () => {
         }
     }, [player]);
 
-    const handleFileChange = (e) => {
+    const handleFileChange = (e, type) => {
         const file = e.target.files[0];
         if (file) {
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
+            if (type === 'image') {
+                setSelectedFile(file);
+                setPreviewUrl(URL.createObjectURL(file));
+            } else if (type === 'video') {
+                setSelectedVideo(file);
+                // Video preview? Not necessary but good to store file.
+            }
+        }
+    };
+
+    const handleDeleteVideo = async (videoUrl) => {
+        if (window.confirm("Are you sure you want to delete this video?")) {
+            try {
+                const { data } = await api.put(`/players/${player.id}/video/delete`, { video_url: videoUrl });
+                setPlayer(data);
+            } catch (error) {
+                 console.error("Failed to delete video", error);
+            }
         }
     };
 
@@ -49,8 +67,13 @@ const PlayerDashboard = () => {
 
             if (selectedFile) {
                 data.append('profile_image', selectedFile);
-            } else {
-                data.append('profile_image', formData.profile_image);
+            }
+            // If no new file selected, we don't need to append existing URL string as backend ignores it if it's not a file? url string is in formData
+            // The backend updates only if req.files exists. 
+            // However, we are sending other text data.
+            
+            if (selectedVideo) {
+                 data.append('gameplay_video', selectedVideo);
             }
 
             const response = await api.put(`/players/${player.id}`, data, {
@@ -59,6 +82,8 @@ const PlayerDashboard = () => {
             
             setPlayer(response.data);
             setIsEditing(false);
+            setSelectedFile(null);
+            setSelectedVideo(null);
         } catch (error) {
             console.error("Failed to update profile", error);
         }
@@ -182,23 +207,78 @@ const PlayerDashboard = () => {
                 </div>
             </div>
 
-            {getYouTubeEmbedUrl(player.video_link) && (
-                <div className="aspect-video w-full max-w-xl rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative">
-                     <div className="absolute top-0 left-0 bg-esports-accent text-white px-4 py-1 text-xs font-bold uppercase z-10 rounded-br-lg">
-                         Featured Gameplay
-                     </div>
-                     <iframe 
-                         width="100%" 
-                         height="500px"
-                         src={getYouTubeEmbedUrl(player.video_link)} 
-                         title="Player Gameplay" 
-                         frameBorder="0" 
-                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                         allowFullScreen
-                         className="w-full h-full object-cover"
-                     ></iframe>
-                </div>
-            )}
+            {/* Videos Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                {/* Legacy video_link support */}
+                {player.video_link && !player.video_links?.includes(player.video_link) && (
+                     <div className="aspect-video w-full max-w-xl rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative group">
+                         {/* Delete Button */}
+                         <button 
+                            onClick={() => handleDeleteVideo(player.video_link)}
+                            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full z-20 opacity-0 group-hover:opacity-100 transition shadow-lg"
+                            title="Delete Video"
+                         >
+                            <Trash2 className="w-4 h-4" />
+                         </button>
+
+                         {getYouTubeEmbedUrl(player.video_link) ? (
+                            <iframe 
+                                width="100%" 
+                                height="100%"
+                                src={getYouTubeEmbedUrl(player.video_link)} 
+                                title="Player Gameplay" 
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen
+                                className="w-full h-full object-cover"
+                            ></iframe>
+                         ) : (
+                            <video 
+                                controls
+                                className="w-full h-full object-cover"
+                                src={player.video_link}
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                         )}
+                    </div>
+                )}
+
+                {/* New video_links array support */}
+                {player.video_links && player.video_links.map((link, index) => (
+                    <div key={index} className="aspect-video w-full max-w-xl rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative group">
+                         {/* Delete Button */}
+                         <button 
+                            onClick={() => handleDeleteVideo(link)}
+                            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full z-20 opacity-0 group-hover:opacity-100 transition shadow-lg"
+                            title="Delete Video"
+                         >
+                            <Trash2 className="w-4 h-4" />
+                         </button>
+
+                         {getYouTubeEmbedUrl(link) ? (
+                            <iframe 
+                                width="100%" 
+                                height="100%"
+                                src={getYouTubeEmbedUrl(link)} 
+                                title={`Player Gameplay ${index + 1}`}
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen
+                                className="w-full h-full object-cover"
+                            ></iframe>
+                         ) : (
+                            <video 
+                                controls
+                                className="w-full h-full object-cover"
+                                src={link}
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                         )}
+                    </div>
+                ))}
+            </div>
 
             {isEditing && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -223,7 +303,7 @@ const PlayerDashboard = () => {
                                     <input 
                                         type="file" 
                                         accept="image/*"
-                                        onChange={handleFileChange}
+                                        onChange={(e) => handleFileChange(e, 'image')}
                                         className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white hover:file:bg-indigo-600"
                                     />
                                 </div>
@@ -278,13 +358,28 @@ const PlayerDashboard = () => {
                                 />
                             </div>
                             <div className="col-span-2">
-                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Video Link (YouTube)</label>
-                                <input 
-                                    type="text" 
-                                    value={formData.video_link || ''} 
-                                    onChange={e => setFormData({...formData, video_link: e.target.value})}
-                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
-                                />
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Video Link (YouTube) OR Upload Video</label>
+                                <div className="flex flex-col gap-4">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Paste YouTube Link"
+                                        value={formData.video_link || ''} 
+                                        onChange={e => setFormData({...formData, video_link: e.target.value})}
+                                        className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
+                                    />
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-px bg-gray-700 flex-1"></div>
+                                        <span className="text-gray-500 text-xs uppercase font-bold">OR</span>
+                                        <div className="h-px bg-gray-700 flex-1"></div>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        accept="video/*"
+                                        onChange={(e) => handleFileChange(e, 'video')}
+                                        className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white hover:file:bg-indigo-600"
+                                    />
+                                     {selectedVideo && <span className="text-green-500 text-xs">Video Selected: {selectedVideo.name}</span>}
+                                </div>
                             </div>
                             
                             <div className="col-span-2 flex justify-end gap-4 mt-4">

@@ -19,8 +19,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Update player
-router.put('/:id', upload.single('profile_image'), playerController.updatePlayer);
+// Update player (fields and uploads)
+router.put('/:id', upload.fields([
+    { name: 'profile_image', maxCount: 1 },
+    { name: 'gameplay_video', maxCount: 1 }
+]), playerController.updatePlayer);
+
+// Delete video
+router.put('/:id/video/delete', playerController.deleteVideo);
 
 // Verify player endpoint
 router.put('/:id/verify', playerController.verifyPlayer);
