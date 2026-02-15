@@ -162,7 +162,7 @@ const PlayerDashboard = () => {
                             </button>
                             <button 
                                 onClick={() => setIsUploading(true)}
-                                className="bg-esports-accent hover:bg-pink-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider shadow-lg shadow-pink-500/30 transition"
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider shadow-lg shadow-indigo-500/30 transition"
                             >
                                 Upload Gameplay
                             </button>
@@ -444,7 +444,7 @@ const PlayerDashboard = () => {
                                 </button>
                                 <button 
                                     type="submit"
-                                    className="px-6 py-3 bg-esports-accent hover:bg-pink-600 rounded-lg text-white font-bold uppercase tracking-wider shadow-lg shadow-pink-500/30 transition"
+                                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold uppercase tracking-wider shadow-lg shadow-indigo-500/30 transition"
                                 >
                                     Upload Video
                                 </button>
