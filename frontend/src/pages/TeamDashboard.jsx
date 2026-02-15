@@ -111,7 +111,11 @@ const TeamDashboard = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {players.map(player => (
-                        <div key={player.id} className="bg-gray-800 border border-gray-700 rounded-xl p-6 flex flex-col hover:border-esports-accent transition cursor-default">
+                        <div 
+                            key={player.id} 
+                            onClick={() => navigate(`/player/${player.id}`)}
+                            className="bg-gray-800 border border-gray-700 rounded-xl p-6 flex flex-col hover:border-esports-accent transition cursor-pointer hover:shadow-lg hover:shadow-esports-accent/20 group"
+                        >
                              <div className="flex justify-between items-start mb-4">
                                 <div className="bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">
                                     {player.role}
@@ -120,8 +124,18 @@ const TeamDashboard = () => {
                                     ₹{player.sold_price.toLocaleString()}
                                 </div>
                              </div>
-                             <h3 className="text-2xl font-black italic">{player.name}</h3>
-                             <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-gray-400 uppercase">
+                             <div className="flex items-center space-x-4 mb-4">
+                                 <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-900 border border-gray-600">
+                                     {player.profile_image ? (
+                                         <img src={player.profile_image} alt={player.name} className="w-full h-full object-cover" />
+                                     ) : (
+                                         <User className="w-full h-full p-2 text-gray-500" />
+                                     )}
+                                 </div>
+                                 <h3 className="text-xl font-black italic group-hover:text-esports-accent transition">{player.name}</h3>
+                             </div>
+                             
+                             <div className="mt-auto grid grid-cols-2 gap-2 text-xs text-gray-400 uppercase">
                                  <div>KD: <span className="text-white">{player.kd_ratio}</span></div>
                                  <div>Tier: <span className="text-white">{player.tier}</span></div>
                              </div>

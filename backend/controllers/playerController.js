@@ -31,7 +31,7 @@ exports.updatePlayer = async (req, res) => {
         req.body.profile_image = `${protocol}://${host}/uploads/${req.file.filename}`;
     }
 
-    const player = await Player.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const player = await Player.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('team_id');
     if (!player) return res.status(404).json({ message: 'Player not found' });
     res.json(player);
   } catch (error) {
@@ -45,7 +45,7 @@ exports.verifyPlayer = async (req, res) => {
     if (!['VERIFIED', 'REJECTED', 'PENDING'].includes(status)) {
         return res.status(400).json({ message: 'Invalid status' });
     }
-    const player = await Player.findByIdAndUpdate(req.params.id, { verification_status: status }, { new: true });
+    const player = await Player.findByIdAndUpdate(req.params.id, { verification_status: status }, { new: true }).populate('team_id');
     if (!player) return res.status(404).json({ message: 'Player not found' });
     res.json(player);
   } catch (error) {

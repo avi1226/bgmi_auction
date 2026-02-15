@@ -7,6 +7,7 @@ import PlayerDashboard from './pages/PlayerDashboard';
 import TeamDashboard from './pages/TeamDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AuctionRoom from './pages/AuctionRoom';
+import PlayerProfile from './pages/PlayerProfile';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -36,6 +37,10 @@ function App() {
 
             {/* Auction accessible to all roles, but controls vary */}
             <Route path="/auction" element={<AuctionRoom />} />
+            
+            <Route element={<PrivateRoute allowedRoles={['team_owner', 'admin']} />}>
+               <Route path="/player/:id" element={<PlayerProfile />} />
+            </Route>
           </Routes>
         </div>
       </AuthProvider>

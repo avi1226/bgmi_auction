@@ -3,6 +3,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { User, Activity, Map, Trophy, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getYouTubeEmbedUrl } from '../utils';
 
 const PlayerDashboard = () => {
     const { user } = useAuth();
@@ -181,7 +182,7 @@ const PlayerDashboard = () => {
                 </div>
             </div>
 
-            {player.video_link && (
+            {getYouTubeEmbedUrl(player.video_link) && (
                 <div className="aspect-w-16 aspect-h-9 w-full rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative">
                      <div className="absolute top-0 left-0 bg-esports-accent text-white px-4 py-1 text-xs font-bold uppercase z-10 rounded-br-lg">
                          Featured Gameplay
@@ -189,7 +190,7 @@ const PlayerDashboard = () => {
                      <iframe 
                          width="100%" 
                          height="500px"
-                         src={player.video_link.replace("watch?v=", "embed/")} 
+                         src={getYouTubeEmbedUrl(player.video_link)} 
                          title="Player Gameplay" 
                          frameBorder="0" 
                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
