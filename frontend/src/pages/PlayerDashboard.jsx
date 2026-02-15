@@ -10,10 +10,12 @@ const PlayerDashboard = () => {
     const [player, setPlayer] = useState(null);
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [formData, setFormData] = useState({});
     const [selectedFile, setSelectedFile] = useState(null);
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [videoLink, setVideoLink] = useState('');
 
     // Effect for initial loading...
     useEffect(() => {
@@ -24,7 +26,6 @@ const PlayerDashboard = () => {
                 tier: player.tier,
                 kd_ratio: player.kd_ratio,
                 experience_years: player.experience_years,
-                video_link: player.video_link,
                 profile_image: player.profile_image
             });
             setPreviewUrl(player.profile_image);
@@ -39,7 +40,6 @@ const PlayerDashboard = () => {
                 setPreviewUrl(URL.createObjectURL(file));
             } else if (type === 'video') {
                 setSelectedVideo(file);
-                // Video preview? Not necessary but good to store file.
             }
         }
     };
@@ -55,25 +55,36 @@ const PlayerDashboard = () => {
         }
     };
 
+    const handleVideoSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const data = new FormData();
+            if (videoLink) data.append('video_link', videoLink);
+            if (selectedVideo) data.append('gameplay_video', selectedVideo);
+
+            const response = await api.put(`/players/${player.id}`, data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            setPlayer(response.data);
+            setIsUploading(false);
+            setSelectedVideo(null);
+            setVideoLink('');
+        } catch (error) {
+             console.error("Failed to upload video", error);
+        }
+    };
+
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
             const data = new FormData();
             Object.keys(formData).forEach(key => {
-                if (key !== 'profile_image') {
-                    data.append(key, formData[key]);
-                }
+                data.append(key, formData[key]);
             });
 
             if (selectedFile) {
                 data.append('profile_image', selectedFile);
-            }
-            // If no new file selected, we don't need to append existing URL string as backend ignores it if it's not a file? url string is in formData
-            // The backend updates only if req.files exists. 
-            // However, we are sending other text data.
-            
-            if (selectedVideo) {
-                 data.append('gameplay_video', selectedVideo);
             }
 
             const response = await api.put(`/players/${player.id}`, data, {
@@ -83,7 +94,6 @@ const PlayerDashboard = () => {
             setPlayer(response.data);
             setIsEditing(false);
             setSelectedFile(null);
-            setSelectedVideo(null);
         } catch (error) {
             console.error("Failed to update profile", error);
         }
@@ -143,12 +153,20 @@ const PlayerDashboard = () => {
                             </span>
                         )}
                         
-                        <button 
-                            onClick={() => setIsEditing(true)}
-                            className="ml-4 mt-2 md:mt-0 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wider block md:inline-block"
-                        >
-                            Edit Profile
-                        </button>
+                        <div className="flex flex-wrap gap-4 mt-4">
+                            <button 
+                                onClick={() => setIsEditing(true)}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider shadow-lg shadow-indigo-500/30 transition"
+                            >
+                                Edit Profile
+                            </button>
+                            <button 
+                                onClick={() => setIsUploading(true)}
+                                className="bg-esports-accent hover:bg-pink-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider shadow-lg shadow-pink-500/30 transition"
+                            >
+                                Upload Gameplay
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -357,30 +375,6 @@ const PlayerDashboard = () => {
                                     className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
                                 />
                             </div>
-                            <div className="col-span-2">
-                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Video Link (YouTube) OR Upload Video</label>
-                                <div className="flex flex-col gap-4">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Paste YouTube Link"
-                                        value={formData.video_link || ''} 
-                                        onChange={e => setFormData({...formData, video_link: e.target.value})}
-                                        className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
-                                    />
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-px bg-gray-700 flex-1"></div>
-                                        <span className="text-gray-500 text-xs uppercase font-bold">OR</span>
-                                        <div className="h-px bg-gray-700 flex-1"></div>
-                                    </div>
-                                    <input 
-                                        type="file" 
-                                        accept="video/*"
-                                        onChange={(e) => handleFileChange(e, 'video')}
-                                        className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white hover:file:bg-indigo-600"
-                                    />
-                                     {selectedVideo && <span className="text-green-500 text-xs">Video Selected: {selectedVideo.name}</span>}
-                                </div>
-                            </div>
                             
                             <div className="col-span-2 flex justify-end gap-4 mt-4">
                                 <button 
@@ -395,6 +389,64 @@ const PlayerDashboard = () => {
                                     className="px-6 py-3 bg-esports-accent hover:bg-indigo-600 rounded-lg text-white font-bold uppercase tracking-wider shadow-lg shadow-indigo-500/30 transition"
                                 >
                                     Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isUploading && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className="bg-gray-900/90 p-8 rounded-2xl w-full max-w-lg border border-gray-700 shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white uppercase tracking-wider">Upload Gameplay</h2>
+                            <button onClick={() => setIsUploading(false)} className="text-gray-400 hover:text-white">
+                                ✖
+                            </button>
+                        </div>
+                        <form onSubmit={handleVideoSubmit} className="flex flex-col gap-6">
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Paste YouTube Link</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="https://youtube.com/..."
+                                    value={videoLink} 
+                                    onChange={e => setVideoLink(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
+                                />
+                            </div>
+                            
+                            <div className="flex items-center gap-4">
+                                <div className="h-px bg-gray-700 flex-1"></div>
+                                <span className="text-gray-500 text-xs uppercase font-bold">OR</span>
+                                <div className="h-px bg-gray-700 flex-1"></div>
+                            </div>
+
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Upload Video File</label>
+                                <input 
+                                    type="file" 
+                                    accept="video/*"
+                                    onChange={(e) => handleFileChange(e, 'video')}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white hover:file:bg-indigo-600"
+                                />
+                                {selectedVideo && <div className="mt-2 text-green-500 text-xs">Selected: {selectedVideo.name}</div>}
+                            </div>
+
+                            <div className="flex justify-end gap-4 mt-2">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsUploading(false)}
+                                    className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold uppercase tracking-wider transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="px-6 py-3 bg-esports-accent hover:bg-pink-600 rounded-lg text-white font-bold uppercase tracking-wider shadow-lg shadow-pink-500/30 transition"
+                                >
+                                    Upload Video
                                 </button>
                             </div>
                         </form>
