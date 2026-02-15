@@ -109,7 +109,7 @@ const PlayerProfile = () => {
             </div>
 
             {getYouTubeEmbedUrl(player.video_link) && (
-                <div className="aspect-w-16 aspect-h-9 w-full rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative">
+                <div className="aspect-video w-full rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative">
                      <div className="absolute top-0 left-0 bg-esports-accent text-white px-4 py-1 text-xs font-bold uppercase z-10 rounded-br-lg">
                          Featured Gameplay
                      </div>
