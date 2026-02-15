@@ -87,7 +87,16 @@ const Register = () => {
                    </div>
                    <div>
                       <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide">Tier</label>
-                      <input type="text" name="tier" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" required />
+                      <select name="tier" onChange={handleChange} className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent">
+                        <option value="Bronze">Bronze</option>
+                        <option value="Silver">Silver</option>
+                        <option value="Gold">Gold</option>
+                        <option value="Platinum">Platinum</option>
+                        <option value="Diamond">Diamond</option>
+                        <option value="Crown">Crown</option>
+                        <option value="Ace">Ace</option>
+                        <option value="Conqueror">Conqueror</option>
+                      </select>
                    </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

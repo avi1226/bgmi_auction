@@ -350,12 +350,20 @@ const PlayerDashboard = () => {
                             </div>
                             <div>
                                 <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Tier</label>
-                                <input 
-                                    type="text" 
+                                <select 
                                     value={formData.tier || ''} 
                                     onChange={e => setFormData({...formData, tier: e.target.value})}
                                     className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
-                                />
+                                >
+                                    <option value="Bronze">Bronze</option>
+                                    <option value="Silver">Silver</option>
+                                    <option value="Gold">Gold</option>
+                                    <option value="Platinum">Platinum</option>
+                                    <option value="Diamond">Diamond</option>
+                                    <option value="Crown">Crown</option>
+                                    <option value="Ace">Ace</option>
+                                    <option value="Conqueror">Conqueror</option>
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">K/D Ratio</label>
