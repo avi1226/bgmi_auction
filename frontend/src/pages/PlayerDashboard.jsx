@@ -26,6 +26,7 @@ const PlayerDashboard = () => {
                 tier: player.tier,
                 kd_ratio: player.kd_ratio,
                 experience_years: player.experience_years,
+                dob: player.dob ? new Date(player.dob).toISOString().split('T')[0] : '',
                 profile_image: player.profile_image
             });
             setPreviewUrl(player.profile_image);
@@ -380,6 +381,22 @@ const PlayerDashboard = () => {
                                     type="number"
                                     value={formData.experience_years || ''} 
                                     onChange={e => setFormData({...formData, experience_years: e.target.value})}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">
+                                    Date of Birth 
+                                </label>
+                                {formData.dob && (
+                                    <span className="text-esports-accent text-xs mb-2 block font-bold">
+                                        (Age: {Math.floor((new Date() - new Date(formData.dob)) / 31557600000)})
+                                    </span>
+                                )}
+                                <input 
+                                    type="date"
+                                    value={formData.dob || ''} 
+                                    onChange={e => setFormData({...formData, dob: e.target.value})}
                                     className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
                                 />
                             </div>
