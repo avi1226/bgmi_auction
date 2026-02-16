@@ -29,7 +29,7 @@ const PlayerDashboard = () => {
                 dob: player.dob ? new Date(player.dob).toISOString().split('T')[0] : '',
                 profile_image: player.profile_image,
                 bgmi_uid: player.bgmi_uid || '',
-                team_experience: player.team_experience,
+                team_experience: player.team_experience || false,
                 device: player.device || 'Android'
             });
             setPreviewUrl(player.profile_image);

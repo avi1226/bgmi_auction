@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Activity, ArrowLeft, Map, Target, Trophy, User } from 'lucide-react';
+import { Activity, ArrowLeft, Map, Target, Trophy, User, Smartphone, Hash, Users } from 'lucide-react';
 import { getYouTubeEmbedUrl } from '../utils';
 
 const PlayerProfile = () => {
@@ -101,10 +101,28 @@ const PlayerProfile = () => {
                      <div className="text-2xl font-black text-white">{player.tier}</div>
                 </div>
                 
-                 <div className="p-6 bg-gray-800/60 backdrop-blur rounded-2xl border border-gray-700 hover:border-pink-500 transition group">
+                <div className="p-6 bg-gray-800/60 backdrop-blur rounded-2xl border border-gray-700 hover:border-pink-500 transition group">
                      <Trophy className="w-8 h-8 text-pink-500 mb-4 opacity-50 group-hover:opacity-100 transition" />
                      <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Experience</h3>
                      <div className="text-2xl font-black text-white">{player.experience_years} Years</div>
+                </div>
+
+                <div className="p-6 bg-gray-800/60 backdrop-blur rounded-2xl border border-gray-700 hover:border-blue-500 transition group">
+                     <Hash className="w-8 h-8 text-blue-500 mb-4 opacity-50 group-hover:opacity-100 transition" />
+                     <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">BGMI UID</h3>
+                     <div className="text-2xl font-black text-white">{player.bgmi_uid || 'N/A'}</div>
+                </div>
+
+                <div className="p-6 bg-gray-800/60 backdrop-blur rounded-2xl border border-gray-700 hover:border-green-500 transition group">
+                     <Users className="w-8 h-8 text-green-500 mb-4 opacity-50 group-hover:opacity-100 transition" />
+                     <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Team Exp.</h3>
+                     <div className="text-2xl font-black text-white">{player.team_experience ? 'Yes' : 'No'}</div>
+                </div>
+
+                <div className="p-6 bg-gray-800/60 backdrop-blur rounded-2xl border border-gray-700 hover:border-orange-500 transition group">
+                     <Smartphone className="w-8 h-8 text-orange-500 mb-4 opacity-50 group-hover:opacity-100 transition" />
+                     <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Device</h3>
+                     <div className="text-2xl font-black text-white">{player.device || 'N/A'}</div>
                 </div>
             </div>
 
