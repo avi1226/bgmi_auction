@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 const Register = () => {
   const [role, setRole] = useState('player');
   const [formData, setFormData] = useState({
-    username: '', password: '', name: '', role: 'Assaulter', tier: 'Gold', kd_ratio: 0, experience_years: 0, dob: '', tournament_history: '', video_link: '', team_name: '', team_logo: ''
+    username: '', password: '', name: '', role: 'Assaulter', tier: 'Gold', kd_ratio: 0, experience_years: 0, dob: '', tournament_history: '', team_name: '', team_logo: ''
   });
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -131,10 +131,7 @@ const Register = () => {
                     </label>
                     <input type="date" name="dob" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent text-gray-300" required />
                  </div>
-                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">Video Link (YouTube)</label>
-                    <input type="url" name="video_link" onChange={handleChange} className="w-full px-4 py-2 h-11 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-esports-accent" placeholder="https://youtube.com/..." />
-                 </div>
+
               </>
             )}
           
