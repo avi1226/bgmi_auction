@@ -265,6 +265,26 @@ const AdminDashboard = () => {
                                     <div className="text-2xl font-mono text-white">₹{viewingPlayer.base_price.toLocaleString()}</div>
                                 </div>
                             </div>
+                            
+                            {/* Verification Documents */}
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                {viewingPlayer.profile_screenshot && (
+                                    <div>
+                                        <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Profile Proof</h3>
+                                        <a href={viewingPlayer.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-gray-700 hover:border-esports-accent transition">
+                                            <img src={viewingPlayer.profile_screenshot} alt="Profile Proof" className="w-full h-48 object-cover" />
+                                        </a>
+                                    </div>
+                                )}
+                                {viewingPlayer.rank_proof_image && (
+                                    <div>
+                                        <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Rank Proof</h3>
+                                        <a href={viewingPlayer.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-gray-700 hover:border-esports-accent transition">
+                                            <img src={viewingPlayer.rank_proof_image} alt="Rank Proof" className="w-full h-48 object-cover" />
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
 
                             {viewingPlayer.video_link && (
                                 <div className="mb-8">

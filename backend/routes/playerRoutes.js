@@ -22,7 +22,9 @@ const upload = multer({ storage: storage });
 // Update player (fields and uploads)
 router.put('/:id', upload.fields([
     { name: 'profile_image', maxCount: 1 },
-    { name: 'gameplay_video', maxCount: 1 }
+    { name: 'gameplay_video', maxCount: 1 },
+    { name: 'profile_screenshot', maxCount: 1 },
+    { name: 'rank_proof_image', maxCount: 1 }
 ]), playerController.updatePlayer);
 
 // Delete video

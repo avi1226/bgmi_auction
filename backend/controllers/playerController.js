@@ -39,6 +39,14 @@ exports.updatePlayer = async (req, res) => {
             updateOps.$set.profile_image = `${protocol}://${host}/uploads/${req.files['profile_image'][0].filename}`;
         }
         
+        if (req.files['profile_screenshot']) {
+            updateOps.$set.profile_screenshot = `${protocol}://${host}/uploads/${req.files['profile_screenshot'][0].filename}`;
+        }
+
+        if (req.files['rank_proof_image']) {
+            updateOps.$set.rank_proof_image = `${protocol}://${host}/uploads/${req.files['rank_proof_image'][0].filename}`;
+        }
+
         if (req.files['gameplay_video']) {
             const videoUrl = `${protocol}://${host}/uploads/${req.files['gameplay_video'][0].filename}`;
             newLinks.push(videoUrl);

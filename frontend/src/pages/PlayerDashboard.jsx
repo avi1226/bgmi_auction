@@ -14,7 +14,11 @@ const PlayerDashboard = () => {
     const [formData, setFormData] = useState({});
     const [selectedFile, setSelectedFile] = useState(null);
     const [selectedVideo, setSelectedVideo] = useState(null);
+    const [selectedProfileScreenshot, setSelectedProfileScreenshot] = useState(null);
+    const [selectedRankProof, setSelectedRankProof] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [previewScreenshotUrl, setPreviewScreenshotUrl] = useState(null);
+    const [previewRankProofUrl, setPreviewRankProofUrl] = useState(null);
     const [videoLink, setVideoLink] = useState('');
 
     // Effect for initial loading...
@@ -44,6 +48,12 @@ const PlayerDashboard = () => {
                 setPreviewUrl(URL.createObjectURL(file));
             } else if (type === 'video') {
                 setSelectedVideo(file);
+            } else if (type === 'profile_screenshot') {
+                setSelectedProfileScreenshot(file);
+                setPreviewScreenshotUrl(URL.createObjectURL(file));
+            } else if (type === 'rank_proof_image') {
+                setSelectedRankProof(file);
+                setPreviewRankProofUrl(URL.createObjectURL(file));
             }
         }
     };
@@ -89,6 +99,12 @@ const PlayerDashboard = () => {
 
             if (selectedFile) {
                 data.append('profile_image', selectedFile);
+            }
+            if (selectedProfileScreenshot) {
+                data.append('profile_screenshot', selectedProfileScreenshot);
+            }
+            if (selectedRankProof) {
+                data.append('rank_proof_image', selectedRankProof);
             }
 
             const response = await api.put(`/players/${player.id}`, data, {
@@ -156,6 +172,25 @@ const PlayerDashboard = () => {
                                 Application Rejected
                             </span>
                         )}
+
+                        <div className="flex gap-4 mt-6">
+                            {(player.profile_screenshot || previewScreenshotUrl) && (
+                                <div className="text-center">
+                                    <p className="text-gray-500 text-xs font-bold uppercase mb-1">Profile Proof</p>
+                                    <a href={player.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block w-24 h-16 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition">
+                                        <img src={player.profile_screenshot} alt="Profile Proof" className="w-full h-full object-cover" />
+                                    </a>
+                                </div>
+                            )}
+                            {(player.rank_proof_image || previewRankProofUrl) && (
+                                <div className="text-center">
+                                    <p className="text-gray-500 text-xs font-bold uppercase mb-1">Rank Proof</p>
+                                    <a href={player.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block w-24 h-16 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition">
+                                        <img src={player.rank_proof_image} alt="Rank Proof" className="w-full h-full object-cover" />
+                                    </a>
+                                </div>
+                            )}
+                        </div>
                         
                         <div className="flex flex-wrap gap-4 mt-4">
                             <button 
@@ -348,6 +383,28 @@ const PlayerDashboard = () => {
                                         className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white hover:file:bg-indigo-600"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Profile Screenshot</label>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={(e) => handleFileChange(e, 'profile_screenshot')}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white hover:file:bg-indigo-600"
+                                />
+                                {(player.profile_screenshot || previewScreenshotUrl) && <p className="text-green-500 text-xs mt-1">File uploaded or available</p>}
+                            </div>
+
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Rank Proof</label>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={(e) => handleFileChange(e, 'rank_proof_image')}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white hover:file:bg-indigo-600"
+                                />
+                                {(player.rank_proof_image || previewRankProofUrl) && <p className="text-green-500 text-xs mt-1">File uploaded or available</p>}
                             </div>
                             <div>
                                 <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Name</label>

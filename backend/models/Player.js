@@ -16,6 +16,8 @@ const PlayerSchema = new mongoose.Schema({
   video_links: { type: [String], default: [] },
   video_link: { type: String },
   profile_image: { type: String },
+  profile_screenshot: { type: String },
+  rank_proof_image: { type: String },
   is_sold: { type: Boolean, default: false },
   sold_price: { type: Number, default: 0 },
   team_id: { type: mongoose.Schema.Types.ObjectId, ref: 'TeamOwner', default: null },
