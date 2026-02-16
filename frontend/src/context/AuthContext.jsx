@@ -12,30 +12,35 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check local storage on load
-    try {
-        const token = localStorage.getItem('token');
-        const storedRole = localStorage.getItem('role');
-        const storedUser = localStorage.getItem('user');
+    const initializeAuth = () => {
+        try {
+            const token = localStorage.getItem('token');
+            const storedRole = localStorage.getItem('role');
+            const storedUser = localStorage.getItem('user');
 
-        if (token && storedUser) {
-            try {
-                const parsedUser = JSON.parse(storedUser);
-                if (parsedUser) {
-                    setUser(parsedUser);
-                    setRole(storedRole);
+            if (token && storedUser && storedRole) {
+                try {
+                    const parsedUser = JSON.parse(storedUser);
+                    if (parsedUser && parsedUser.id) { // Ensure valid user object
+                        setUser(parsedUser);
+                        setRole(storedRole);
+                    } else {
+                        console.warn("Invalid user data in localStorage, clearing.");
+                        localStorage.clear();
+                    }
+                } catch (e) {
+                    console.error("Failed to parse stored user, clearing storage", e);
+                    localStorage.clear();
                 }
-            } catch (e) {
-                console.error("Failed to parse stored user, clearing storage", e);
-                localStorage.removeItem('token');
-                localStorage.removeItem('role');
-                localStorage.removeItem('user');
             }
+        } catch (e) {
+            console.error("Auth initialization error:", e);
+        } finally {
+            setLoading(false);
         }
-    } catch (e) {
-        console.error("Auth initialization error:", e);
-    } finally {
-        setLoading(false);
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (credentials) => {
@@ -58,6 +63,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedUserData) => {
+      try {
+          // Merge with existing user data to preserve fields like id/role if not present in update
+          const newUser = { ...user, ...updatedUserData };
+          setUser(newUser);
+          localStorage.setItem('user', JSON.stringify(newUser));
+      } catch (error) {
+          console.error("Failed to update user context", error);
+      }
+  };
+
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
@@ -77,7 +94,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, login, logout, register, loading }}>
+    <AuthContext.Provider value={{ user, role, login, logout, register, updateUser, loading }}>
       {!loading ? children : <div className="flex justify-center items-center h-screen bg-gray-900 text-white">Loading...</div>}
     </AuthContext.Provider>
   );

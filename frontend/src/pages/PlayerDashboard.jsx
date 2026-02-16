@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { getYouTubeEmbedUrl } from '../utils';
 
 const PlayerDashboard = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const [player, setPlayer] = useState(null);
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
@@ -112,6 +112,12 @@ const PlayerDashboard = () => {
             });
             
             setPlayer(response.data);
+            
+            // Update auth context so session remains strictly valid and up-to-date
+            if (updateUser) {
+                updateUser(response.data);
+            }
+
             setIsEditing(false);
             setSelectedFile(null);
         } catch (error) {

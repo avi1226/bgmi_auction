@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Users, Timer, Activity, ShieldCheck } from 'lucide-react';
+import { getYouTubeEmbedUrl } from '../utils';
 
 const AdminDashboard = () => {
     const { user } = useAuth();
@@ -286,22 +287,61 @@ const AdminDashboard = () => {
                                 )}
                             </div>
 
-                            {viewingPlayer.video_link && (
-                                <div className="mb-8">
-                                    <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Gameplay Video</h3>
-                                    <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
-                                       <iframe 
-                                         width="100%" 
-                                         height="100%" 
-                                         src={viewingPlayer.video_link.replace("watch?v=", "embed/")} 
-                                         title="Gameplay"
-                                         frameBorder="0"
-                                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
-                                         allowFullScreen
-                                       ></iframe>
+                            {/* Videos Grid */}
+                            <div className="grid grid-cols-1 gap-6 mb-8">
+                                {/* Legacy video_link support */}
+                                {viewingPlayer.video_link && !viewingPlayer.video_links?.includes(viewingPlayer.video_link) && (
+                                     <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-gray-700 shadow-2xl relative">
+                                         {getYouTubeEmbedUrl(viewingPlayer.video_link) ? (
+                                            <iframe 
+                                                width="100%" 
+                                                height="100%"
+                                                src={getYouTubeEmbedUrl(viewingPlayer.video_link)} 
+                                                title="Player Gameplay" 
+                                                frameBorder="0" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowFullScreen
+                                                className="w-full h-full object-cover"
+                                            ></iframe>
+                                         ) : (
+                                            <video 
+                                                controls
+                                                className="w-full h-full object-cover"
+                                                src={viewingPlayer.video_link}
+                                            >
+                                                Your browser does not support the video tag.
+                                            </video>
+                                         )}
                                     </div>
-                                </div>
-                            )}
+                                )}
+
+                                {/* New video_links array support */}
+                                {viewingPlayer.video_links && viewingPlayer.video_links.map((link, index) => (
+                                    <div key={index} className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-gray-700 shadow-2xl relative">
+                                        <h4 className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded z-10">Video {index + 1}</h4>
+                                         {getYouTubeEmbedUrl(link) ? (
+                                            <iframe 
+                                                width="100%" 
+                                                height="100%"
+                                                src={getYouTubeEmbedUrl(link)} 
+                                                title={`Player Gameplay ${index + 1}`}
+                                                frameBorder="0" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowFullScreen
+                                                className="w-full h-full object-cover"
+                                            ></iframe>
+                                         ) : (
+                                            <video 
+                                                controls
+                                                className="w-full h-full object-cover"
+                                                src={link}
+                                            >
+                                                Your browser does not support the video tag.
+                                            </video>
+                                         )}
+                                    </div>
+                                ))}
+                            </div>
 
                             <div className="flex space-x-4 border-t border-gray-800 pt-6">
                                 {(viewingPlayer.verification_status || 'PENDING') === 'PENDING' && (
