@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { User, Activity, Map, Trophy, Target, Trash2 } from 'lucide-react';
+import { User, Activity, Map, Trophy, Target, Trash2, Smartphone, Hash, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getYouTubeEmbedUrl } from '../utils';
 
@@ -27,7 +27,10 @@ const PlayerDashboard = () => {
                 kd_ratio: player.kd_ratio,
                 experience_years: player.experience_years,
                 dob: player.dob ? new Date(player.dob).toISOString().split('T')[0] : '',
-                profile_image: player.profile_image
+                profile_image: player.profile_image,
+                bgmi_uid: player.bgmi_uid || '',
+                team_experience: player.team_experience,
+                device: player.device || 'Android'
             });
             setPreviewUrl(player.profile_image);
         }
@@ -224,6 +227,25 @@ const PlayerDashboard = () => {
                      <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Experience</h3>
                      <div className="text-2xl font-black text-white">{player.experience_years} Years</div>
                 </div>
+
+                {/* New Cards */}
+                <div className="p-6 bg-gray-800/60 backdrop-blur rounded-2xl border border-gray-700 hover:border-blue-500 transition group">
+                     <Hash className="w-8 h-8 text-blue-500 mb-4 opacity-50 group-hover:opacity-100 transition" />
+                     <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">BGMI UID</h3>
+                     <div className="text-2xl font-black text-white">{player.bgmi_uid || 'N/A'}</div>
+                </div>
+
+                <div className="p-6 bg-gray-800/60 backdrop-blur rounded-2xl border border-gray-700 hover:border-green-500 transition group">
+                     <Users className="w-8 h-8 text-green-500 mb-4 opacity-50 group-hover:opacity-100 transition" />
+                     <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Team Exp.</h3>
+                     <div className="text-2xl font-black text-white">{player.team_experience ? 'Yes' : 'No'}</div>
+                </div>
+
+                <div className="p-6 bg-gray-800/60 backdrop-blur rounded-2xl border border-gray-700 hover:border-orange-500 transition group">
+                     <Smartphone className="w-8 h-8 text-orange-500 mb-4 opacity-50 group-hover:opacity-100 transition" />
+                     <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Device</h3>
+                     <div className="text-2xl font-black text-white">{player.device || 'N/A'}</div>
+                </div>
             </div>
 
             {/* Videos Grid */}
@@ -383,6 +405,38 @@ const PlayerDashboard = () => {
                                     onChange={e => setFormData({...formData, experience_years: e.target.value})}
                                     className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">BGMI UID</label>
+                                <input 
+                                    type="text"
+                                    value={formData.bgmi_uid || ''} 
+                                    onChange={e => setFormData({...formData, bgmi_uid: e.target.value})}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Team Experience?</label>
+                                <select 
+                                    value={formData.team_experience} 
+                                    onChange={e => setFormData({...formData, team_experience: e.target.value === 'true'})}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
+                                >
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Device</label>
+                                <select 
+                                    value={formData.device || 'Android'} 
+                                    onChange={e => setFormData({...formData, device: e.target.value})}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-esports-accent outline-none focus:ring-1 focus:ring-esports-accent transition"
+                                >
+                                    <option value="Android">Android</option>
+                                    <option value="iOS">iOS</option>
+                                    <option value="Emulator">Emulator</option>
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">

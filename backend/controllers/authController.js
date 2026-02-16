@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 exports.registerPlayer = async (req, res) => {
-  const { username, password, name, role, tier, kd_ratio, experience_years, tournament_history, video_link } = req.body;
+  const { username, password, name, role, tier, kd_ratio, experience_years, tournament_history, video_link, bgmi_uid, team_experience, device } = req.body;
   try {
     const existing = await Player.findOne({ username });
     if(existing) return res.status(400).json({ message: 'Username taken' });
@@ -20,7 +20,10 @@ exports.registerPlayer = async (req, res) => {
         kd_ratio, 
         experience_years, 
         tournament_history, 
-        video_link
+        video_link,
+        bgmi_uid,
+        team_experience,
+        device
     });
     
     res.status(201).json({ message: 'Player registered successfully', playerId: player.id });
