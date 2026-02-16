@@ -268,21 +268,50 @@ const AdminDashboard = () => {
                             </div>
                             
                             {/* Verification Documents */}
-                            <div className="grid grid-cols-2 gap-4 mb-8">
-                                {viewingPlayer.profile_screenshot && (
-                                    <div>
-                                        <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Profile Proof</h3>
-                                        <a href={viewingPlayer.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-gray-700 hover:border-esports-accent transition">
-                                            <img src={viewingPlayer.profile_screenshot} alt="Profile Proof" className="w-full h-48 object-cover" />
-                                        </a>
+                            <div className="mb-8 p-4 bg-gray-800/30 rounded-xl border border-gray-700">
+                                <h3 className="text-gray-400 uppercase text-xs font-bold mb-4 flex items-center">
+                                    <ShieldCheck className="w-4 h-4 mr-2 text-esports-accent" />
+                                    Verification Documents
+                                </h3>
+                                
+                                {(!viewingPlayer.profile_screenshot && !viewingPlayer.rank_proof_image) ? (
+                                    <div className="text-center py-8 text-gray-500 italic border-2 border-dashed border-gray-700 rounded-xl">
+                                        No verification proofs have been uploaded by this player yet.
                                     </div>
-                                )}
-                                {viewingPlayer.rank_proof_image && (
-                                    <div>
-                                        <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Rank Proof</h3>
-                                        <a href={viewingPlayer.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-gray-700 hover:border-esports-accent transition">
-                                            <img src={viewingPlayer.rank_proof_image} alt="Rank Proof" className="w-full h-48 object-cover" />
-                                        </a>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {viewingPlayer.profile_screenshot && (
+                                            <div>
+                                                <h4 className="text-gray-500 text-[10px] uppercase font-bold mb-2">Profile Proof</h4>
+                                                <a href={viewingPlayer.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-gray-600 hover:border-esports-accent transition group relative">
+                                                    <img 
+                                                        src={viewingPlayer.profile_screenshot} 
+                                                        alt="Profile Proof" 
+                                                        className="w-full h-48 object-cover group-hover:scale-105 transition duration-500"
+                                                        onError={(e) => {e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';}}
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                                        <span className="text-white text-xs font-bold uppercase tracking-widest border border-white px-3 py-1 rounded">View Full</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        )}
+                                        {viewingPlayer.rank_proof_image && (
+                                            <div>
+                                                <h4 className="text-gray-500 text-[10px] uppercase font-bold mb-2">Rank Proof</h4>
+                                                <a href={viewingPlayer.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-gray-600 hover:border-esports-accent transition group relative">
+                                                    <img 
+                                                        src={viewingPlayer.rank_proof_image} 
+                                                        alt="Rank Proof" 
+                                                        className="w-full h-48 object-cover group-hover:scale-105 transition duration-500"
+                                                        onError={(e) => {e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';}}
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                                        <span className="text-white text-xs font-bold uppercase tracking-widest border border-white px-3 py-1 rounded">View Full</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
