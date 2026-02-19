@@ -70,28 +70,35 @@ const Verification = () => {
         {/* Status Badge */}
         <div className="mb-6 p-4 rounded-lg bg-gray-700 flex justify-between items-center">
           <span className="text-lg font-semibold">Current Status:</span>
-          <span className={`px-4 py-2 rounded-full font-bold uppercase ${
-            player.verification_status === 'verified' ? 'bg-green-500 text-black' :
-            player.verification_status === 'rejected' ? 'bg-red-500 text-white' :
-            player.verification_status === 'pending' ? 'bg-yellow-500 text-black' :
-            'bg-gray-500 text-white'
-          }`}>
-            {player.verification_status || 'Unverified'}
-          </span>
+          {/* If verified but no video, show Action Required */}
+          {((player.verification_status || '').toLowerCase() === 'verified' && !player.verification_video_url) ? (
+             <span className="px-4 py-2 rounded-full font-bold uppercase bg-orange-500 text-white animate-pulse">
+                Action Required
+             </span>
+          ) : (
+              <span className={`px-4 py-2 rounded-full font-bold uppercase ${
+                (player.verification_status || '').toLowerCase() === 'verified' ? 'bg-green-500 text-black' :
+                (player.verification_status || '').toLowerCase() === 'rejected' ? 'bg-red-500 text-white' :
+                (player.verification_status || '').toLowerCase() === 'pending' ? 'bg-yellow-500 text-black' :
+                'bg-gray-500 text-white'
+              }`}>
+                {player.verification_status || 'Unverified'}
+              </span>
+          )}
         </div>
 
-        {player.verification_rejection_reason && player.verification_status === 'rejected' && (
+        {player.verification_rejection_reason && (player.verification_status || '').toLowerCase() === 'rejected' && (
            <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded text-red-200">
                <strong>Reason for Rejection:</strong> {player.verification_rejection_reason}
            </div>
         )}
 
         {/* Verification Verified View */ }
-        {player.verification_status === 'verified' ? (
+        {(player.verification_status || '').toLowerCase() === 'verified' && player.verification_video_url ? (
           <div className="text-center py-8">
             <div className="text-6xl mb-4">✅</div>
             <h3 className="text-2xl font-bold text-green-400">You are Verified!</h3>
-            <p className="mt-2 text-gray-300">Your profile now has the verification badge. You are eligible for auctions.</p>
+            <p className="mt-2 text-gray-300">Your profile is fully verified with video proof.</p>
             <button onClick={() => navigate('/player-dashboard')} className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded transition">
               Back to Dashboard
             </button>

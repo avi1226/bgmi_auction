@@ -164,25 +164,43 @@ const PlayerDashboard = () => {
                         
                         {/* Verification Status */}
                         {/* Verification Status */}
-                        {player.verification_status === 'pending' && (
-                            <span className="bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
-                                Verification Pending
-                            </span>
-                        )}
-                        {player.verification_status === 'verified' && (
-                            <span className="bg-green-500/20 text-green-500 border border-green-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                                Verified
-                            </span>
-                        )}
-                        {(player.verification_status === 'rejected' || !player.verification_status || player.verification_status === 'unverified') && (
-                            <button 
-                                onClick={() => navigate('/verification')}
-                                className="bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/50 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center transition"
-                            >
-                                {player.verification_status === 'rejected' ? 'Verification Rejected' : 'Get Verified'}
-                                <span className="ml-2 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                            </button>
-                        )}
+                        <div className="flex flex-wrap items-center gap-3 mt-3">
+                            {/* Status: Pending */}
+                            {(player.verification_status || '').toLowerCase() === 'pending' && (
+                                <span className="bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
+                                    Verification Pending
+                                </span>
+                            )}
+
+                            {/* Status: Verified (Only if video exists or not sold logic overrides) */}
+                            {(player.verification_status || '').toLowerCase() === 'verified' && player.verification_video_url && (
+                                <span className="bg-green-500/20 text-green-500 border border-green-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                    Verified
+                                </span>
+                            )}
+
+                            {/* Button: Get Verified (Unverified/Rejected) */}
+                            {((player.verification_status || 'unverified').toLowerCase() === 'rejected' || (player.verification_status || 'unverified').toLowerCase() === 'unverified') && (
+                                <button 
+                                    onClick={() => navigate('/verification')}
+                                    className="bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/50 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center transition"
+                                >
+                                    {(player.verification_status || '').toLowerCase() === 'rejected' ? 'Verification Rejected' : 'Get Verified'}
+                                    <span className="ml-2 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                </button>
+                            )}
+
+                            {/* Button: Upload Video (If Verified/Sold but NO video) */}
+                            {/* This replaces the 'Action Required' badge with a direct clickable action */}
+                            {((player.verification_status || '').toLowerCase() === 'verified' || player.is_sold) && !player.verification_video_url && (
+                                <button 
+                                    onClick={() => navigate('/verification')}
+                                    className="bg-orange-500/20 text-orange-500 hover:bg-orange-500/30 border border-orange-500/50 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center transition animate-pulse"
+                                >
+                                    ⚠️ Upload Video Proof
+                                </button>
+                            )}
+                        </div>
 
                         <div className="flex gap-4 mt-6">
                             {(player.profile_screenshot || previewScreenshotUrl) && (
