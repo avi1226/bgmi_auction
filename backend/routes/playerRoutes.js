@@ -24,8 +24,12 @@ router.put('/:id', upload.fields([
     { name: 'profile_image', maxCount: 1 },
     { name: 'gameplay_video', maxCount: 1 },
     { name: 'profile_screenshot', maxCount: 1 },
-    { name: 'rank_proof_image', maxCount: 1 }
+    { name: 'rank_proof_image', maxCount: 1 },
+    { name: 'verification_video', maxCount: 1 }
 ]), playerController.updatePlayer);
+
+// Upload verification video specific endpoint (optional if users want a separate step)
+router.post('/:id/verify-upload', upload.single('verification_video'), playerController.uploadVerificationVideo);
 
 // Delete video
 router.put('/:id/video/delete', playerController.deleteVideo);

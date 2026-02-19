@@ -163,20 +163,25 @@ const PlayerDashboard = () => {
                         <p className="text-gray-400 font-mono tracking-widest text-sm mt-1 uppercase mb-2">Pro Player Profile</p>
                         
                         {/* Verification Status */}
-                        {(player.verification_status || 'PENDING') === 'PENDING' && (
+                        {/* Verification Status */}
+                        {player.verification_status === 'pending' && (
                             <span className="bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
-                                Pending Approval
+                                Verification Pending
                             </span>
                         )}
-                        {(player.verification_status) === 'VERIFIED' && (
+                        {player.verification_status === 'verified' && (
                             <span className="bg-green-500/20 text-green-500 border border-green-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                                 Verified
                             </span>
                         )}
-                        {(player.verification_status) === 'REJECTED' && (
-                            <span className="bg-red-500/20 text-red-500 border border-red-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                                Application Rejected
-                            </span>
+                        {(player.verification_status === 'rejected' || !player.verification_status || player.verification_status === 'unverified') && (
+                            <button 
+                                onClick={() => navigate('/verification')}
+                                className="bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/50 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center transition"
+                            >
+                                {player.verification_status === 'rejected' ? 'Verification Rejected' : 'Get Verified'}
+                                <span className="ml-2 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            </button>
                         )}
 
                         <div className="flex gap-4 mt-6">

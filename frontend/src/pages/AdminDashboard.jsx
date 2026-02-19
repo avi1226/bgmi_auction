@@ -17,8 +17,15 @@ const AdminDashboard = () => {
             try {
                 const { data } = await api.get('/players');
                 setPlayers(data);
-                setPendingPlayers(data.filter(p => (p.verification_status || 'PENDING') === 'PENDING'));
-                setVerifiedPlayers(data.filter(p => (p.verification_status || 'PENDING') === 'VERIFIED'));
+                // Support both uppercase (legacy) and lowercase (new) status
+                setPendingPlayers(data.filter(p => {
+                    const status = (p.verification_status || 'unverified').toLowerCase();
+                    return status === 'pending';
+                }));
+                setVerifiedPlayers(data.filter(p => {
+                     const status = (p.verification_status || 'unverified').toLowerCase();
+                     return status === 'verified';
+                }));
             } catch (error) {
                 console.error("Failed to fetch players:", error);
             }
@@ -26,27 +33,35 @@ const AdminDashboard = () => {
         fetchData();
     }, []);
 
-    const verifyPlayer = async (playerId, status) => {
+    const verifyPlayer = async (playerId, status, reason = null) => {
         try {
-            await api.put(`/players/${playerId}/verify`, { status });
+            const payload = { status: status.toLowerCase() }; // Ensure lowercase sent to backend
+            if (reason) payload.rejection_reason = reason;
+            
+            await api.put(`/players/${playerId}/verify`, payload);
+            
             // Refresh logic - optimistic update
-            setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, verification_status: status } : p));
+            setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, verification_status: status.toLowerCase() } : p));
             setPendingPlayers(prev => prev.filter(p => p.id !== playerId));
-            if (status === 'VERIFIED') {
+            
+            if (status.toLowerCase() === 'verified') {
                 const updatedPlayer = players.find(p => p.id === playerId);
-                if (updatedPlayer) setVerifiedPlayers(prev => [...prev, { ...updatedPlayer, verification_status: status }]);
+                if (updatedPlayer) setVerifiedPlayers(prev => [...prev, { ...updatedPlayer, verification_status: status.toLowerCase() }]);
+            }
+            if (viewingPlayer && viewingPlayer.id === playerId) {
+                setViewingPlayer(null); // Close modal on action
             }
         } catch (error) {
             console.error("Verification failed:", error);
             alert(error.response?.data?.message || "Failed to update status. Check backend connection.");
         }
     };
-
+    
+    // ... startAuction function remains same ...
     const startAuction = async (playerId) => {
         try {
             const { data } = await api.post('/auction/start', { playerId });
             setActiveAuctionCode(data.auctionCode);
-            // Optional: Scroll to top to see code
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
             console.error("Auction Start Error:", error);
@@ -108,7 +123,7 @@ const AdminDashboard = () => {
                      <div className="px-6 py-4 border-b border-gray-800 bg-orange-900/20">
                          <h2 className="text-xl font-bold text-orange-400 flex items-center">
                             <Activity className="w-5 h-5 mr-3" />
-                            Pending Verification
+                            Pending Verification Requests
                          </h2>
                      </div>
                      <div className="overflow-x-auto">
@@ -132,20 +147,14 @@ const AdminDashboard = () => {
                                          </td>
                                          <td className="px-6 py-4">{player.role}</td>
                                          <td className="px-6 py-4 text-xs">
-                                            KD: {player.kd_ratio} | Exp: {player.experience_years}y | Tier: {player.tier}
+                                            KD: {player.kd_ratio} | Tier: {player.tier}
                                          </td>
                                          <td className="px-6 py-4 text-right space-x-2">
                                              <button 
-                                                onClick={(e) => { e.stopPropagation(); verifyPlayer(player.id, 'VERIFIED'); }}
-                                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold uppercase"
+                                                onClick={(e) => { e.stopPropagation(); setViewingPlayer(player); }}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-bold uppercase"
                                              >
-                                                 Approve
-                                             </button>
-                                             <button 
-                                                onClick={(e) => { e.stopPropagation(); verifyPlayer(player.id, 'REJECTED'); }}
-                                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-bold uppercase"
-                                             >
-                                                 Reject
+                                                 Review Video
                                              </button>
                                          </td>
                                      </tr>
@@ -236,160 +245,81 @@ const AdminDashboard = () => {
                                 <div>
                                     <h2 className="text-4xl font-black text-white uppercase tracking-tighter">{viewingPlayer.name}</h2>
                                     <div className="flex space-x-2 mt-2">
-                                        <span className="bg-gray-800 px-3 py-1 rounded text-xs font-bold uppercase text-gray-300">{viewingPlayer.role}</span>
-                                        <span className={`px-3 py-1 rounded text-xs font-bold uppercase ${
-                                            (viewingPlayer.verification_status || 'PENDING') === 'VERIFIED' ? 'bg-green-500/20 text-green-500' :
-                                            (viewingPlayer.verification_status || 'PENDING') === 'REJECTED' ? 'bg-red-500/20 text-red-500' :
-                                            'bg-yellow-500/20 text-yellow-500'
+                                        <span className={`px-3 py-1 rounded text-xs font-bold uppercase border ${
+                                            (viewingPlayer.verification_status || 'unverified').toLowerCase() === 'verified' ? 'bg-green-500/20 text-green-500 border-green-500' :
+                                            (viewingPlayer.verification_status || 'unverified').toLowerCase() === 'rejected' ? 'bg-red-500/20 text-red-500 border-red-500' :
+                                            'bg-yellow-500/20 text-yellow-500 border-yellow-500'
                                         }`}>
-                                            {viewingPlayer.verification_status || 'PENDING'}
+                                            {viewingPlayer.verification_status || 'Unverified'}
                                         </span>
+                                        <span className="bg-gray-800 px-3 py-1 rounded text-xs font-bold uppercase text-gray-300">{viewingPlayer.role}</span>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Verification Video Section (Highlight) */}
+                            {viewingPlayer.verification_video_url && (
+                                <div className="mb-8 p-4 bg-yellow-900/20 border border-yellow-500/50 rounded-xl">
+                                    <h3 className="text-yellow-400 uppercase text-xs font-bold mb-3 flex items-center">
+                                        <Activity className="w-4 h-4 mr-2" />
+                                        Verification Video Proof
+                                    </h3>
+                                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-black border border-gray-800 relative">
+                                        <video 
+                                            controls
+                                            className="w-full h-full object-cover"
+                                            src={viewingPlayer.verification_video_url}
+                                        >
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Documents (Screenshots) */}
                             <div className="grid grid-cols-2 gap-4 mb-8">
-                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
-                                    <div className="text-gray-500 text-xs uppercase font-bold mb-1">K/D Ratio</div>
-                                    <div className="text-2xl font-mono text-white">{viewingPlayer.kd_ratio}</div>
-                                </div>
-                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
-                                    <div className="text-gray-500 text-xs uppercase font-bold mb-1">Tier</div>
-                                    <div className="text-2xl font-mono text-white">{viewingPlayer.tier}</div>
-                                </div>
-                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
-                                    <div className="text-gray-500 text-xs uppercase font-bold mb-1">Experience</div>
-                                    <div className="text-2xl font-mono text-white">{viewingPlayer.experience_years} Years</div>
-                                </div>
-                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
-                                    <div className="text-gray-500 text-xs uppercase font-bold mb-1">Base Price</div>
-                                    <div className="text-2xl font-mono text-white">₹{viewingPlayer.base_price.toLocaleString()}</div>
-                                </div>
+                                {viewingPlayer.profile_screenshot && (
+                                    <div>
+                                        <h4 className="text-gray-500 text-[10px] uppercase font-bold mb-2">Profile Proof</h4>
+                                        <a href={viewingPlayer.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-gray-700 hover:border-esports-accent h-32">
+                                            <img src={viewingPlayer.profile_screenshot} alt="Proof" className="w-full h-full object-cover" />
+                                        </a>
+                                    </div>
+                                )}
+                                {viewingPlayer.rank_proof_image && (
+                                    <div>
+                                        <h4 className="text-gray-500 text-[10px] uppercase font-bold mb-2">Rank Proof</h4>
+                                        <a href={viewingPlayer.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-gray-700 hover:border-esports-accent h-32">
+                                            <img src={viewingPlayer.rank_proof_image} alt="Proof" className="w-full h-full object-cover" />
+                                        </a>
+                                    </div>
+                                )}
                             </div>
                             
-                            {/* Verification Documents */}
-                            <div className="mb-8 p-4 bg-gray-800/30 rounded-xl border border-gray-700">
-                                <h3 className="text-gray-400 uppercase text-xs font-bold mb-4 flex items-center">
-                                    <ShieldCheck className="w-4 h-4 mr-2 text-esports-accent" />
-                                    Verification Documents
-                                </h3>
-                                
-                                {(!viewingPlayer.profile_screenshot && !viewingPlayer.rank_proof_image) ? (
-                                    <div className="text-center py-8 text-gray-500 italic border-2 border-dashed border-gray-700 rounded-xl">
-                                        No verification proofs have been uploaded by this player yet.
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {viewingPlayer.profile_screenshot && (
-                                            <div>
-                                                <h4 className="text-gray-500 text-[10px] uppercase font-bold mb-2">Profile Proof</h4>
-                                                <a href={viewingPlayer.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-gray-600 hover:border-esports-accent transition group relative">
-                                                    <img 
-                                                        src={viewingPlayer.profile_screenshot} 
-                                                        alt="Profile Proof" 
-                                                        className="w-full h-48 object-cover group-hover:scale-105 transition duration-500"
-                                                        onError={(e) => {e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';}}
-                                                    />
-                                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                                                        <span className="text-white text-xs font-bold uppercase tracking-widest border border-white px-3 py-1 rounded">View Full</span>
-                                                    </div>
-                                                </a>
-                                            </div>
-                                        )}
-                                        {viewingPlayer.rank_proof_image && (
-                                            <div>
-                                                <h4 className="text-gray-500 text-[10px] uppercase font-bold mb-2">Rank Proof</h4>
-                                                <a href={viewingPlayer.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-gray-600 hover:border-esports-accent transition group relative">
-                                                    <img 
-                                                        src={viewingPlayer.rank_proof_image} 
-                                                        alt="Rank Proof" 
-                                                        className="w-full h-48 object-cover group-hover:scale-105 transition duration-500"
-                                                        onError={(e) => {e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';}}
-                                                    />
-                                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                                                        <span className="text-white text-xs font-bold uppercase tracking-widest border border-white px-3 py-1 rounded">View Full</span>
-                                                    </div>
-                                                </a>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Videos Grid */}
-                            <div className="grid grid-cols-1 gap-6 mb-8">
-                                {/* Legacy video_link support */}
-                                {viewingPlayer.video_link && !viewingPlayer.video_links?.includes(viewingPlayer.video_link) && (
-                                     <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-gray-700 shadow-2xl relative">
-                                         {getYouTubeEmbedUrl(viewingPlayer.video_link) ? (
-                                            <iframe 
-                                                width="100%" 
-                                                height="100%"
-                                                src={getYouTubeEmbedUrl(viewingPlayer.video_link)} 
-                                                title="Player Gameplay" 
-                                                frameBorder="0" 
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowFullScreen
-                                                className="w-full h-full object-cover"
-                                            ></iframe>
-                                         ) : (
-                                            <video 
-                                                controls
-                                                className="w-full h-full object-cover"
-                                                src={viewingPlayer.video_link}
-                                            >
-                                                Your browser does not support the video tag.
-                                            </video>
-                                         )}
-                                    </div>
-                                )}
-
-                                {/* New video_links array support */}
-                                {viewingPlayer.video_links && viewingPlayer.video_links.map((link, index) => (
-                                    <div key={index} className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-gray-700 shadow-2xl relative">
-                                        <h4 className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded z-10">Video {index + 1}</h4>
-                                         {getYouTubeEmbedUrl(link) ? (
-                                            <iframe 
-                                                width="100%" 
-                                                height="100%"
-                                                src={getYouTubeEmbedUrl(link)} 
-                                                title={`Player Gameplay ${index + 1}`}
-                                                frameBorder="0" 
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowFullScreen
-                                                className="w-full h-full object-cover"
-                                            ></iframe>
-                                         ) : (
-                                            <video 
-                                                controls
-                                                className="w-full h-full object-cover"
-                                                src={link}
-                                            >
-                                                Your browser does not support the video tag.
-                                            </video>
-                                         )}
-                                    </div>
-                                ))}
-                            </div>
-
+                            {/* Action Buttons */}
                             <div className="flex space-x-4 border-t border-gray-800 pt-6">
-                                {(viewingPlayer.verification_status || 'PENDING') === 'PENDING' && (
+                                {(viewingPlayer.verification_status || 'unverified').toLowerCase() === 'pending' && (
                                     <>
                                         <button 
-                                            onClick={() => { verifyPlayer(viewingPlayer.id, 'VERIFIED'); setViewingPlayer(null); }}
+                                            onClick={() => verifyPlayer(viewingPlayer.id, 'verified')}
                                             className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl uppercase tracking-wider transition"
                                         >
-                                            Approve Player
+                                            <ShieldCheck className="w-4 h-4 inline-block mr-2" />
+                                            Approve
                                         </button>
                                         <button 
-                                            onClick={() => { verifyPlayer(viewingPlayer.id, 'REJECTED'); setViewingPlayer(null); }}
+                                            onClick={() => {
+                                                const reason = prompt("Enter rejection reason:");
+                                                if (reason) verifyPlayer(viewingPlayer.id, 'rejected', reason);
+                                            }}
                                             className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl uppercase tracking-wider transition"
                                         >
-                                            Reject Player
+                                            Reject
                                         </button>
                                     </>
                                 )}
-                                {(viewingPlayer.verification_status === 'VERIFIED' && !viewingPlayer.is_sold) && (
+                                
+                                {((viewingPlayer.verification_status || 'unverified').toLowerCase() === 'verified' && !viewingPlayer.is_sold) && (
                                     <button 
                                         onClick={() => { startAuction(viewingPlayer.id); setViewingPlayer(null); }}
                                         className="w-full bg-esports-accent hover:bg-indigo-600 text-white font-bold py-3 rounded-xl uppercase tracking-wider transition"

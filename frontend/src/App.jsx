@@ -8,6 +8,7 @@ import TeamDashboard from './pages/TeamDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AuctionRoom from './pages/AuctionRoom';
 import PlayerProfile from './pages/PlayerProfile';
+import Verification from './pages/Verification';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -25,6 +26,7 @@ function App() {
             {/* Protected Routes */}
             <Route element={<PrivateRoute allowedRoles={['player']} />}>
               <Route path="/player/dashboard" element={<PlayerDashboard />} />
+              <Route path="/verification" element={<Verification />} />
             </Route>
             
             <Route element={<PrivateRoute allowedRoles={['team_owner']} />}>

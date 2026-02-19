@@ -22,7 +22,10 @@ const PlayerSchema = new mongoose.Schema({
   sold_price: { type: Number, default: 0 },
   team_id: { type: mongoose.Schema.Types.ObjectId, ref: 'TeamOwner', default: null },
   base_price: { type: Number, default: 50000.00 },
-  verification_status: { type: String, enum: ['PENDING', 'VERIFIED', 'REJECTED'], default: 'PENDING' },
+  verification_status: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' },
+  verification_video_url: { type: String },
+  verification_badge: { type: String, enum: ['none', 'basic', 'video', 'pro'], default: 'none' },
+  rejection_reason: { type: String },
 }, { timestamps: true, id: true }); // Enable virtual id
 
 PlayerSchema.set('toJSON', {
