@@ -1,4 +1,5 @@
 const Player = require('../models/Player');
+const TeamOwner = require('../models/TeamOwner');
 
 exports.getAllPlayers = async (req, res) => {
   try {
@@ -25,12 +26,10 @@ exports.updatePlayer = async (req, res) => {
     const updateOps = { $set: updateFields };
     const newLinks = [];
 
-    // Valid YouTube/URL check could be done here, but simple push for now
     if (video_link) {
         newLinks.push(video_link);
     }
 
-    // Construct full URLs if files uploaded
     if (req.files) {
         const protocol = req.protocol;
         const host = req.get('host');
@@ -75,18 +74,8 @@ exports.verifyPlayer = async (req, res) => {
   try {
     const { status, badge, rejection_reason } = req.body;
     
-    // Normalize status to lowercase for consistency if needed, but schema uses define enum.
-    // Schema enum: ['unverified', 'pending', 'verified', 'rejected']
     if (!['verified', 'rejected', 'pending', 'unverified'].includes(status)) {
-         // Fallback for legacy calls or case safety
-         if (['VERIFIED', 'REJECTED', 'PENDING'].includes(status)) {
-             // allow implicit conversion if you updated schema to only lowercase, 
-             // OR if schema allows both. My previous edit to schema used lowercase for new options but kept default...
-             // Wait, I replaced the whole line in schema with lowercase options.
-             // So I must enforce lowercase here.
-         } else {
-            return res.status(400).json({ message: 'Invalid status' });
-         }
+         return res.status(400).json({ message: 'Invalid status' });
     }
     
     const updateOps = { verification_status: status };
@@ -126,7 +115,6 @@ exports.deleteVideo = async (req, res) => {
     const { video_url } = req.body;
     const updateOps = { $pull: { video_links: video_url } };
     
-    // Check if it matches legacy link
     const playerCheck = await Player.findById(req.params.id);
     if (playerCheck && playerCheck.video_link === video_url) {
         updateOps.$unset = { video_link: 1 };
@@ -144,6 +132,33 @@ exports.getPlayersByTeam = async (req, res) => {
   try {
     const players = await Player.find({ team_id: req.params.teamId }).populate('team_id');
     res.json(players);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.releasePlayer = async (req, res) => {
+  try {
+    const player = await Player.findById(req.params.id);
+    if (!player) return res.status(404).json({ message: 'Player not found' });
+    
+    if (!player.is_sold || !player.team_id) {
+       return res.status(400).json({ message: 'Player is not currently signed to any team' });
+    }
+
+    const soldPrice = player.sold_price || 0;
+    const teamId = player.team_id;
+
+    // Refund the team
+    await TeamOwner.findByIdAndUpdate(teamId, { $inc: { budget: soldPrice } });
+
+    // Reset player status
+    player.is_sold = false;
+    player.team_id = null;
+    player.sold_price = 0;
+    await player.save();
+
+    res.json({ message: 'Player released successfully', player });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -48,12 +48,17 @@ const endAuctionInternal = async (io, playerId) => {
           amount: current_bid
       });
 
+      const winnerTeam = await TeamOwner.findById(highest_bidder_id);
+      const player = await Player.findById(playerId);
+
       io.emit('auction_update', {
         type: 'SOLD',
         payload: {
           playerId,
+          player,
           soldPrice: current_bid,
-          winnerTeamId: highest_bidder_id
+          winnerTeamId: highest_bidder_id,
+          teamName: winnerTeam?.team_name || 'Anonymous Team'
         }
       });
       console.log(`Player ${playerId} sold to team ${highest_bidder_id} for ${current_bid}`);

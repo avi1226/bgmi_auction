@@ -11,6 +11,7 @@ const AuctionRoom = () => {
   const [timer, setTimer] = useState(30);
   const [bidAmount, setBidAmount] = useState(0);
   const [messages, setMessages] = useState([]);
+  const [soldStatus, setSoldStatus] = useState(null); // { teamName, price }
   
   // Code entry state
   const [hasJoined, setHasJoined] = useState(role === 'admin'); // Admins bypass
@@ -86,11 +87,22 @@ const AuctionRoom = () => {
       setBidAmount(parseFloat(data.payload.currentBid) + 5000);
       setMessages(prev => [...prev, `New Bid: ₹${data.payload.currentBid} by ${data.payload.teamName}`]);
     } else if (data.type === 'SOLD') {
-      setMessages(prev => [...prev, `SOLD! ${data.payload.playerId} sold for ₹${data.payload.soldPrice}`]);
-      setTimeout(() => setActiveAuction(null), 5000); 
+      const soldPrice = parseFloat(data.payload.soldPrice);
+      const teamName = data.payload.teamName || 'Unknown Team';
+      setSoldStatus({ teamName, price: soldPrice });
+      setMessages(prev => [...prev, `SOLD! ${data.payload.player?.name || 'Player'} sold for ₹${soldPrice.toLocaleString()} to ${teamName}`]);
+      
+      // Auto-clear sold status after 8 seconds (before next player)
+      setTimeout(() => {
+          setSoldStatus(null);
+          setActiveAuction(null);
+      }, 8000); 
     } else if (data.type === 'UNSOLD') {
       setMessages(prev => [...prev, `Player UNSOLD.`]);
-      setTimeout(() => setActiveAuction(null), 5000);
+      setTimeout(() => {
+          setSoldStatus(null);
+          setActiveAuction(null);
+      }, 5000);
     }
   };
 
@@ -193,8 +205,37 @@ const AuctionRoom = () => {
                 <motion.div 
                     initial={{ x: -50, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    className="bg-esports-light/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-gray-700 relative overflow-hidden"
+                    className={`bg-esports-light/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-gray-700 relative overflow-hidden transition-all duration-700 ${soldStatus ? 'ring-4 ring-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.3)]' : ''}`}
                 >
+                    <AnimatePresence>
+                        {soldStatus && (
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center"
+                            >
+                                <motion.div 
+                                    className="animate-sale-stamp"
+                                >
+                                    <h2 className="text-7xl font-black italic tracking-tighter uppercase mb-2 animate-shine drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                                        SOLD
+                                    </h2>
+                                    <div className="h-1 w-full bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-4"></div>
+                                    <p className="text-xl font-bold uppercase tracking-[0.2em] text-white mb-1">
+                                        TO <span className="text-esports-highlight">{soldStatus.teamName}</span>
+                                    </p>
+                                    <p className="text-3xl font-black text-green-400 font-mono">
+                                        ₹{soldStatus.price.toLocaleString()}
+                                    </p>
+                                </motion.div>
+                                
+                                {/* Spotlight visual */}
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-full bg-gradient-to-b from-yellow-500/20 to-transparent blur-3xl pointer-events-none animate-spotlight"></div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     <div className="absolute top-0 right-0 p-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${activeAuction.player.role === 'IGL' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-blue-500/20 text-blue-500'}`}>
                             {activeAuction.player.role}
@@ -204,14 +245,18 @@ const AuctionRoom = () => {
                     <div className="flex flex-col items-center md:items-start md:flex-row gap-6">
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 p-1">
                              <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center text-4xl font-bold">
-                                {activeAuction.player.name ? activeAuction.player.name.charAt(0) : '?'}
+                                {activeAuction.player.profile_image ? (
+                                    <img src={activeAuction.player.profile_image} alt={activeAuction.player.name} className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                    activeAuction.player.name?.charAt(0) || '?'
+                                )}
                              </div>
                         </div>
                         <div>
                             <h2 className="text-4xl font-black uppercase italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
                                 {activeAuction.player.name}
                             </h2>
-                             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                                 <div className="bg-gray-800/50 p-2 rounded">
                                     <span className="text-gray-400 block text-xs uppercase">K/D Ratio</span>
                                     <span className="font-mono text-lg text-esports-highlight">{activeAuction.player.kd_ratio}</span>
@@ -283,8 +328,8 @@ const AuctionRoom = () => {
                                 transition={{ duration: 1, ease: "linear" }}
                             />
                         </div>
-                        <div className={`mt-2 font-mono text-2xl font-bold ${timer < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
-                            00:{timer < 10 ? `0${timer}` : timer}
+                         <div className={`mt-2 font-mono text-2xl font-bold ${soldStatus ? 'text-yellow-500' : timer < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+                            {soldStatus ? 'AUCTION CLOSED' : `00:${timer < 10 ? `0${timer}` : timer}`}
                         </div>
                      </div>
 
@@ -313,11 +358,12 @@ const AuctionRoom = () => {
                                      +50k
                                  </button>
                              </div>
-                             <button 
+                              <button 
                                 onClick={placeBid}
-                                className="w-full bg-esports-accent hover:bg-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg transform transition active:scale-95 text-xl uppercase tracking-wider"
+                                disabled={soldStatus}
+                                className={`w-full font-bold py-4 rounded-xl shadow-lg transform transition active:scale-95 text-xl uppercase tracking-wider ${soldStatus ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-esports-accent hover:bg-indigo-600 text-white'}`}
                              >
-                                 PLACE BID
+                                {soldStatus ? 'Bidding Disabled' : 'PLACE BID'}
                              </button>
                          </div>
                      ) : (

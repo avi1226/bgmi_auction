@@ -42,6 +42,24 @@ const TeamDashboard = () => {
         if (user) fetchTeamPlayers();
     }, [user]);
 
+    const handleRelease = async (playerId, playerName, e) => {
+        e.stopPropagation(); // Don't navigate to profile
+        if (!window.confirm(`Are you sure you want to release ${playerName}? This will refund the amount spent and the player will return to the auction list.`)) return;
+
+        try {
+            const id = playerId || '';
+            if (!id) throw new Error("Invalid Player ID");
+            
+            await api.post(`/players/${id}/release`);
+            // Refresh data
+            window.location.reload(); 
+        } catch (error) {
+            console.error("Failed to release player", error);
+            const errorMsg = error.response?.data?.message || error.message || "Release failed";
+            alert(`Error: ${errorMsg}`);
+        }
+    };
+
     if (!team) return <div className="flex justify-center items-center h-screen text-white">Loading Team Data...</div>;
 
     return (
@@ -110,10 +128,12 @@ const TeamDashboard = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {players.map(player => (
+                     {players.map(player => {
+                        const pId = player._id || player.id;
+                        return (
                         <div 
-                            key={player.id} 
-                            onClick={() => navigate(`/player/${player.id}`)}
+                            key={pId} 
+                            onClick={() => navigate(`/player/${pId}`)}
                             className="bg-gray-800 border border-gray-700 rounded-xl p-6 flex flex-col hover:border-esports-accent transition cursor-pointer hover:shadow-lg hover:shadow-esports-accent/20 group"
                         >
                              <div className="flex justify-between items-start mb-4">
@@ -135,12 +155,21 @@ const TeamDashboard = () => {
                                  <h3 className="text-xl font-black italic group-hover:text-esports-accent transition">{player.name}</h3>
                              </div>
                              
-                             <div className="mt-auto grid grid-cols-2 gap-2 text-xs text-gray-400 uppercase">
-                                 <div>KD: <span className="text-white">{player.kd_ratio}</span></div>
-                                 <div>Tier: <span className="text-white">{player.tier}</span></div>
+                             <div className="mt-auto flex flex-col gap-4">
+                                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 uppercase">
+                                     <div>KD: <span className="text-white">{player.kd_ratio}</span></div>
+                                     <div>Tier: <span className="text-white">{player.tier}</span></div>
+                                 </div>
+                                 <button 
+                                    onClick={(e) => handleRelease(pId, player.name, e)}
+                                    className="w-full py-2 bg-red-500/10 hover:bg-red-500 border border-red-500/50 hover:border-red-500 text-red-500 hover:text-white rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-300 transform active:scale-95"
+                                 >
+                                     Release Player
+                                 </button>
                              </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

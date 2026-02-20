@@ -40,4 +40,7 @@ router.put('/:id/verify', playerController.verifyPlayer);
 // Get players by team
 router.get('/team/:teamId', playerController.getPlayersByTeam);
 
+// Release player from team
+router.post('/:id/release', playerController.releasePlayer);
+
 module.exports = router;

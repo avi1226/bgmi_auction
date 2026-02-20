@@ -23,6 +23,8 @@ export const AuthProvider = ({ children }) => {
                     const parsedUser = JSON.parse(storedUser);
                     // Check for either 'id' or '_id' which is common with MongoDB objects
                     if (parsedUser && (parsedUser.id || parsedUser._id)) { 
+                        // Ensure 'id' exists even if it's stored as '_id'
+                        if (parsedUser._id && !parsedUser.id) parsedUser.id = parsedUser._id;
                         setUser(parsedUser);
                         setRole(storedRole);
                     } else {
