@@ -21,16 +21,18 @@ export const AuthProvider = ({ children }) => {
             if (token && storedUser && storedRole) {
                 try {
                     const parsedUser = JSON.parse(storedUser);
-                    if (parsedUser && parsedUser.id) { // Ensure valid user object
+                    // Check for either 'id' or '_id' which is common with MongoDB objects
+                    if (parsedUser && (parsedUser.id || parsedUser._id)) { 
                         setUser(parsedUser);
                         setRole(storedRole);
                     } else {
-                        console.warn("Invalid user data in localStorage, clearing.");
-                        localStorage.clear();
+                        console.warn("Invalid user data in localStorage, removing user info.");
+                        localStorage.removeItem('user');
+                        localStorage.removeItem('role');
                     }
                 } catch (e) {
-                    console.error("Failed to parse stored user, clearing storage", e);
-                    localStorage.clear();
+                    console.error("Failed to parse stored user", e);
+                    localStorage.removeItem('user');
                 }
             }
         } catch (e) {
@@ -64,11 +66,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (updatedUserData) => {
+      if (!updatedUserData) return;
       try {
-          // Merge with existing user data to preserve fields like id/role if not present in update
-          const newUser = { ...user, ...updatedUserData };
-          setUser(newUser);
-          localStorage.setItem('user', JSON.stringify(newUser));
+          setUser(prevUser => {
+              // Merge with existing user data
+              const newUser = { ...prevUser, ...updatedUserData };
+              // Ensure we have an 'id' field for consistency if '_id' is provided
+              if (newUser._id && !newUser.id) newUser.id = newUser._id;
+              
+              localStorage.setItem('user', JSON.stringify(newUser));
+              return newUser;
+          });
       } catch (error) {
           console.error("Failed to update user context", error);
       }

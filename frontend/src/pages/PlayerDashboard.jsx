@@ -20,6 +20,7 @@ const PlayerDashboard = () => {
     const [previewScreenshotUrl, setPreviewScreenshotUrl] = useState(null);
     const [previewRankProofUrl, setPreviewRankProofUrl] = useState(null);
     const [videoLink, setVideoLink] = useState('');
+    const [isUploadingProofs, setIsUploadingProofs] = useState(false);
 
     // Effect for initial loading...
     useEffect(() => {
@@ -119,7 +120,10 @@ const PlayerDashboard = () => {
             }
 
             setIsEditing(false);
+            setIsUploadingProofs(false);
             setSelectedFile(null);
+            setSelectedProfileScreenshot(null);
+            setSelectedRankProof(null);
         } catch (error) {
             console.error("Failed to update profile", error);
         }
@@ -203,22 +207,39 @@ const PlayerDashboard = () => {
                         </div>
 
                         <div className="flex gap-4 mt-6">
-                            {(player.profile_screenshot || previewScreenshotUrl) && (
-                                <div className="text-center">
-                                    <p className="text-gray-500 text-xs font-bold uppercase mb-1">Profile Proof</p>
-                                    <a href={player.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block w-24 h-16 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition">
-                                        <img src={player.profile_screenshot} alt="Profile Proof" className="w-full h-full object-cover" />
+                            <div className="text-center">
+                                <p className="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-widest">Profile Proof</p>
+                                {(player.profile_screenshot || previewScreenshotUrl) ? (
+                                    <a href={player.profile_screenshot || previewScreenshotUrl} target="_blank" rel="noopener noreferrer" className="block w-24 h-16 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition shadow-lg group">
+                                        <img src={previewScreenshotUrl || player.profile_screenshot} alt="Profile Proof" className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
                                     </a>
-                                </div>
-                            )}
-                            {(player.rank_proof_image || previewRankProofUrl) && (
-                                <div className="text-center">
-                                    <p className="text-gray-500 text-xs font-bold uppercase mb-1">Rank Proof</p>
-                                    <a href={player.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block w-24 h-16 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition">
-                                        <img src={player.rank_proof_image} alt="Rank Proof" className="w-full h-full object-cover" />
+                                ) : (
+                                    <button 
+                                        onClick={() => setIsUploadingProofs(true)}
+                                        className="w-24 h-16 rounded border-2 border-dashed border-gray-700 hover:border-esports-highlight flex flex-col items-center justify-center text-[8px] text-gray-500 hover:text-esports-highlight transition group"
+                                    >
+                                        <Activity className="w-4 h-4 mb-1 opacity-50 group-hover:opacity-100" />
+                                        UPLOAD PROOF
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="text-center">
+                                <p className="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-widest">Rank Proof</p>
+                                {(player.rank_proof_image || previewRankProofUrl) ? (
+                                    <a href={player.rank_proof_image || previewRankProofUrl} target="_blank" rel="noopener noreferrer" className="block w-24 h-16 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition shadow-lg group">
+                                        <img src={previewRankProofUrl || player.rank_proof_image} alt="Rank Proof" className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
                                     </a>
-                                </div>
-                            )}
+                                ) : (
+                                    <button 
+                                        onClick={() => setIsUploadingProofs(true)}
+                                        className="w-24 h-16 rounded border-2 border-dashed border-gray-700 hover:border-esports-accent flex flex-col items-center justify-center text-[8px] text-gray-500 hover:text-esports-accent transition group"
+                                    >
+                                        <Trophy className="w-4 h-4 mb-1 opacity-50 group-hover:opacity-100" />
+                                        UPLOAD RANK
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         
                         <div className="flex flex-wrap gap-4 mt-4">
@@ -612,6 +633,66 @@ const PlayerDashboard = () => {
                                     className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold uppercase tracking-wider shadow-lg shadow-indigo-500/30 transition"
                                 >
                                     Upload Video
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isUploadingProofs && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className="bg-gray-900/90 p-8 rounded-2xl w-full max-w-lg border border-gray-700 shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white uppercase tracking-wider">Upload Identity Proofs</h2>
+                            <button onClick={() => setIsUploadingProofs(false)} className="text-gray-400 hover:text-white">
+                                ✖
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdate} className="flex flex-col gap-6">
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider font-mono">Profile Screenshot</label>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={(e) => handleFileChange(e, 'profile_screenshot')}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-highlight file:text-white"
+                                />
+                                {previewScreenshotUrl && (
+                                    <img src={previewScreenshotUrl} className="mt-2 w-32 h-20 object-cover rounded border border-gray-700" alt="Preview" />
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider font-mono">Rank Screenshot</label>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={(e) => handleFileChange(e, 'rank_proof_image')}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-esports-accent file:text-white"
+                                />
+                                {previewRankProofUrl && (
+                                    <img src={previewRankProofUrl} className="mt-2 w-32 h-20 object-cover rounded border border-gray-700" alt="Preview" />
+                                )}
+                            </div>
+
+                            <p className="text-gray-500 text-[10px] uppercase font-bold tracking-tighter">
+                                Note: These proofs help us verify your tier and stats accurately.
+                            </p>
+
+                            <div className="flex justify-end gap-4">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsUploadingProofs(false)}
+                                    className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold uppercase tracking-wider transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold uppercase tracking-wider shadow-lg shadow-indigo-500/30 transition"
+                                >
+                                    Save Proofs
                                 </button>
                             </div>
                         </form>

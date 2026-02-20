@@ -211,7 +211,7 @@ const AuctionRoom = () => {
                             <h2 className="text-4xl font-black uppercase italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
                                 {activeAuction.player.name}
                             </h2>
-                            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                                 <div className="bg-gray-800/50 p-2 rounded">
                                     <span className="text-gray-400 block text-xs uppercase">K/D Ratio</span>
                                     <span className="font-mono text-lg text-esports-highlight">{activeAuction.player.kd_ratio}</span>
@@ -220,10 +220,25 @@ const AuctionRoom = () => {
                                     <span className="text-gray-400 block text-xs uppercase">Tier</span>
                                     <span className="font-mono text-lg text-green-400">{activeAuction.player.tier}</span>
                                 </div>
-                                 <div className="bg-gray-800/50 p-2 rounded">
-                                    <span className="text-gray-400 block text-xs uppercase">Experience</span>
-                                    <span className="font-mono text-lg">{activeAuction.player.experience_years} Yrs</span>
-                                </div>
+                            </div>
+                            
+                            <div className="flex gap-2 mt-4">
+                                {activeAuction.player.profile_screenshot && (
+                                    <div className="text-center">
+                                        <p className="text-gray-500 text-[8px] font-bold uppercase mb-1">Profile Proof</p>
+                                        <a href={activeAuction.player.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block w-16 h-10 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition">
+                                            <img src={activeAuction.player.profile_screenshot} alt="Profile" className="w-full h-full object-cover" />
+                                        </a>
+                                    </div>
+                                )}
+                                {activeAuction.player.rank_proof_image && (
+                                    <div className="text-center">
+                                        <p className="text-gray-500 text-[8px] font-bold uppercase mb-1">Rank Proof</p>
+                                        <a href={activeAuction.player.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block w-16 h-10 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition">
+                                            <img src={activeAuction.player.rank_proof_image} alt="Rank" className="w-full h-full object-cover" />
+                                        </a>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

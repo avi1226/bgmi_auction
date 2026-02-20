@@ -52,11 +52,32 @@ const PlayerProfile = () => {
                         </h1>
                         <p className="text-gray-400 font-mono tracking-widest text-sm mt-1 uppercase mb-2">Pro Player Profile</p>
                         
-                        {(player.verification_status) === 'VERIFIED' && (
-                            <span className="bg-green-500/20 text-green-500 border border-green-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                                Verified
-                            </span>
-                        )}
+                         <div className="flex flex-wrap items-center gap-3 mt-3">
+                            {(player.verification_status || '').toLowerCase() === 'verified' && (
+                                <span className="bg-green-500/20 text-green-500 border border-green-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                    Verified
+                                </span>
+                            )}
+                         </div>
+
+                        <div className="flex gap-4 mt-6">
+                            {player.profile_screenshot && (
+                                <div className="text-center">
+                                    <p className="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-widest">Profile Proof</p>
+                                    <a href={player.profile_screenshot} target="_blank" rel="noopener noreferrer" className="block w-24 h-16 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition shadow-lg group">
+                                        <img src={player.profile_screenshot} alt="Profile Proof" className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                                    </a>
+                                </div>
+                            )}
+                            {player.rank_proof_image && (
+                                <div className="text-center">
+                                    <p className="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-widest">Rank Proof</p>
+                                    <a href={player.rank_proof_image} target="_blank" rel="noopener noreferrer" className="block w-24 h-16 rounded overflow-hidden border border-gray-700 hover:border-esports-accent transition shadow-lg group">
+                                        <img src={player.rank_proof_image} alt="Rank Proof" className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                                    </a>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
