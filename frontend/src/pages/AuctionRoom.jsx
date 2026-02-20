@@ -11,7 +11,7 @@ const AuctionRoom = () => {
   const [timer, setTimer] = useState(30);
   const [bidAmount, setBidAmount] = useState(0);
   const [messages, setMessages] = useState([]);
-  const [soldStatus, setSoldStatus] = useState(null); // { teamName, price }
+  const [soldStatus, setSoldStatus] = useState(null); // { teamName, price, teamLogo }
   
   // Code entry state
   const [hasJoined, setHasJoined] = useState(role === 'admin'); // Admins bypass
@@ -89,7 +89,8 @@ const AuctionRoom = () => {
     } else if (data.type === 'SOLD') {
       const soldPrice = parseFloat(data.payload.soldPrice);
       const teamName = data.payload.teamName || 'Unknown Team';
-      setSoldStatus({ teamName, price: soldPrice });
+      const teamLogo = data.payload.teamLogo;
+      setSoldStatus({ teamName, price: soldPrice, teamLogo });
       setMessages(prev => [...prev, `SOLD! ${data.payload.player?.name || 'Player'} sold for ₹${soldPrice.toLocaleString()} to ${teamName}`]);
       
       // Auto-clear sold status after 8 seconds (before next player)
@@ -197,6 +198,104 @@ const AuctionRoom = () => {
   // 3. Active Auction Room
   return (
     <div className="flex flex-col h-screen bg-esports-dark text-white overflow-hidden relative">
+        {/* Full Screen Cinematic Overlay */}
+        <AnimatePresence>
+            {soldStatus && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center overflow-hidden"
+                >
+                    {/* Minimal Confetti Burst */}
+                    {[...Array(15)].map((_, i) => (
+                        <div 
+                            key={i}
+                            className="confetti-particle"
+                            style={{
+                                left: `${10 + Math.random() * 80}%`,
+                                backgroundColor: ['#ffd700', '#ffffff', '#4f46e5', '#22c55e'][Math.floor(Math.random() * 4)],
+                                animationDuration: `${2 + Math.random() * 2}s`,
+                                width: '8px',
+                                height: '8px',
+                                opacity: 0.6
+                            }}
+                        />
+                    ))}
+
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none animate-spotlight-clean"></div>
+
+                    <motion.div 
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                        className="relative z-10 flex flex-col items-center max-w-2xl w-full"
+                    >
+                        {/* BIG SOLD TEXT */}
+                        <h1 className="text-7xl md:text-9xl font-black italic tracking-tighter uppercase mb-6 animate-shine drop-shadow-[0_0_40px_rgba(255,255,255,0.4)]">
+                            SOLD
+                        </h1>
+
+                        {/* Team Logo Circle */}
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-yellow-500 p-1.5 bg-gray-900 shadow-[0_0_30px_rgba(234,179,8,0.4)] mb-8 flex items-center justify-center overflow-hidden animate-pulse-gold"
+                        >
+                            <div className="w-full h-full rounded-full bg-indigo-600 flex items-center justify-center text-4xl font-bold text-white uppercase overflow-hidden">
+                                {soldStatus.teamLogo ? (
+                                    <img src={soldStatus.teamLogo} alt={soldStatus.teamName} className="w-full h-full object-cover" />
+                                ) : (
+                                    soldStatus.teamName.charAt(0)
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* SOLD TO TEAM NAME */}
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.6 }}
+                            className="mb-4"
+                        >
+                            <p className="text-xl md:text-3xl font-bold uppercase tracking-[0.4em] text-white/70 mb-2">
+                                SIGNED BY
+                            </p>
+                            <h2 className="text-4xl md:text-6xl font-black uppercase text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                                {soldStatus.teamName}
+                            </h2>
+                        </motion.div>
+
+                        {/* Final Price */}
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.8 }}
+                            className="mb-10"
+                        >
+                            <p className="text-4xl md:text-7xl font-mono font-black text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+                                ₹{soldStatus.price.toLocaleString()}
+                            </p>
+                        </motion.div>
+
+                        {/* Auction Closed Badge */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1.2 }}
+                            className="px-6 py-2 bg-white/5 border border-white/10 rounded-full backdrop-blur-sm"
+                        >
+                            <span className="text-sm font-black uppercase tracking-[0.5em] text-gray-500">
+                                Auction Closed
+                            </span>
+                        </motion.div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center opacity-10 blur-sm pointer-events-none"></div>
 
         <div className="flex-1 flex flex-col md:flex-row z-10 p-6 md:p-12 gap-8">
@@ -205,37 +304,8 @@ const AuctionRoom = () => {
                 <motion.div 
                     initial={{ x: -50, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    className={`bg-esports-light/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-gray-700 relative overflow-hidden transition-all duration-700 ${soldStatus ? 'ring-4 ring-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.3)]' : ''}`}
+                    className={`bg-esports-light/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-gray-700 relative overflow-hidden transition-all duration-700 ${soldStatus ? 'grayscale opacity-50 blur-sm scale-95' : ''}`}
                 >
-                    <AnimatePresence>
-                        {soldStatus && (
-                            <motion.div 
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center"
-                            >
-                                <motion.div 
-                                    className="animate-sale-stamp"
-                                >
-                                    <h2 className="text-7xl font-black italic tracking-tighter uppercase mb-2 animate-shine drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                                        SOLD
-                                    </h2>
-                                    <div className="h-1 w-full bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-4"></div>
-                                    <p className="text-xl font-bold uppercase tracking-[0.2em] text-white mb-1">
-                                        TO <span className="text-esports-highlight">{soldStatus.teamName}</span>
-                                    </p>
-                                    <p className="text-3xl font-black text-green-400 font-mono">
-                                        ₹{soldStatus.price.toLocaleString()}
-                                    </p>
-                                </motion.div>
-                                
-                                {/* Spotlight visual */}
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-full bg-gradient-to-b from-yellow-500/20 to-transparent blur-3xl pointer-events-none animate-spotlight"></div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
                     <div className="absolute top-0 right-0 p-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${activeAuction.player.role === 'IGL' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-blue-500/20 text-blue-500'}`}>
                             {activeAuction.player.role}
@@ -289,7 +359,7 @@ const AuctionRoom = () => {
                     </div>
                 </motion.div>
 
-                <div className="flex-1 bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800 relative group">
+                <div className={`flex-1 bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800 relative group transition-all duration-700 ${soldStatus ? 'grayscale opacity-50 blur-sm scale-95' : ''}`}>
                     {activeAuction.player.video_link ? (
                            <iframe 
                              width="100%" 
@@ -335,7 +405,7 @@ const AuctionRoom = () => {
 
                      {role === 'team_owner' ? (
                          <div className="flex flex-col space-y-3">
-                             <div className="flex items-center space-x-2 bg-gray-800 rounded-lg p-1">
+                             <div className="flex items-center space-x-2 bg-gray-800 rounded-lg p-1 border border-gray-700 focus-within:border-esports-accent transition">
                                  <span className="pl-3 text-gray-400 select-none">₹</span>
                                  <input 
                                     type="number" 
@@ -347,13 +417,13 @@ const AuctionRoom = () => {
                              <div className="flex space-x-2">
                                  <button 
                                     onClick={() => setBidAmount(prev => parseFloat(prev) + 10000)}
-                                    className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-xs font-bold"
+                                    className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-xs font-bold transition active:scale-95"
                                  >
                                      +10k
                                  </button>
                                  <button 
                                     onClick={() => setBidAmount(prev => parseFloat(prev) + 50000)}
-                                    className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-xs font-bold"
+                                    className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-xs font-bold transition active:scale-95"
                                  >
                                      +50k
                                  </button>
@@ -361,19 +431,22 @@ const AuctionRoom = () => {
                               <button 
                                 onClick={placeBid}
                                 disabled={soldStatus}
-                                className={`w-full font-bold py-4 rounded-xl shadow-lg transform transition active:scale-95 text-xl uppercase tracking-wider ${soldStatus ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-esports-accent hover:bg-indigo-600 text-white'}`}
+                                className={`w-full font-bold py-4 rounded-xl shadow-lg transform transition active:scale-95 text-xl uppercase tracking-wider ${soldStatus ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50' : 'bg-esports-accent hover:bg-indigo-600 text-white shadow-indigo-500/20'}`}
                              >
                                 {soldStatus ? 'Bidding Disabled' : 'PLACE BID'}
-                             </button>
+                              </button>
                          </div>
                      ) : (
                          <div className="p-4 bg-gray-800/50 rounded-lg text-sm text-gray-400">
                              {role === 'admin' ? (
-                                 <button onClick={stopAuction} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded">
+                                 <button onClick={stopAuction} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded transition active:scale-95">
                                      FORCE STOP AUCTION
                                  </button>
                              ) : (
-                                 "Spectator Mode"
+                                 <div className="flex items-center justify-center space-x-2">
+                                     <div className="w-1.5 h-1.5 bg-esports-accent rounded-full animate-ping"></div>
+                                     <span>Spectator Mode</span>
+                                 </div>
                              )}
                          </div>
                      )}

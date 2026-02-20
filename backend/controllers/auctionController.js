@@ -58,7 +58,8 @@ const endAuctionInternal = async (io, playerId) => {
           player,
           soldPrice: current_bid,
           winnerTeamId: highest_bidder_id,
-          teamName: winnerTeam?.team_name || 'Anonymous Team'
+          teamName: winnerTeam?.team_name || 'Anonymous Team',
+          teamLogo: winnerTeam?.team_logo
         }
       });
       console.log(`Player ${playerId} sold to team ${highest_bidder_id} for ${current_bid}`);
