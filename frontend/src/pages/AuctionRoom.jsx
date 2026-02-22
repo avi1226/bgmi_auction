@@ -93,11 +93,11 @@ const AuctionRoom = () => {
       setSoldStatus({ teamName, price: soldPrice, teamLogo });
       setMessages(prev => [...prev, `SOLD! ${data.payload.player?.name || 'Player'} sold for ₹${soldPrice.toLocaleString()} to ${teamName}`]);
       
-      // Auto-clear sold status after 8 seconds (before next player)
+      // Auto-clear sold status after 60 seconds if no interaction
       setTimeout(() => {
-          setSoldStatus(null);
-          setActiveAuction(null);
-      }, 8000); 
+          setSoldStatus(current => current ? null : current);
+          setActiveAuction(current => current ? null : current);
+      }, 60000); 
     } else if (data.type === 'UNSOLD') {
       setMessages(prev => [...prev, `Player UNSOLD.`]);
       setTimeout(() => {
@@ -198,101 +198,42 @@ const AuctionRoom = () => {
   // 3. Active Auction Room
   return (
     <div className="flex flex-col h-screen bg-esports-dark text-white overflow-hidden relative">
-        {/* Full Screen Cinematic Overlay */}
+        {/* Full Screen Minimal Overlay */}
         <AnimatePresence>
             {soldStatus && (
-                <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center overflow-hidden"
-                >
-                    {/* Minimal Confetti Burst */}
-                    {[...Array(15)].map((_, i) => (
-                        <div 
-                            key={i}
-                            className="confetti-particle"
-                            style={{
-                                left: `${10 + Math.random() * 80}%`,
-                                backgroundColor: ['#ffd700', '#ffffff', '#4f46e5', '#22c55e'][Math.floor(Math.random() * 4)],
-                                animationDuration: `${2 + Math.random() * 2}s`,
-                                width: '8px',
-                                height: '8px',
-                                opacity: 0.6
-                            }}
-                        />
-                    ))}
-
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none animate-spotlight-clean"></div>
-
-                    <motion.div 
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="relative z-10 flex flex-col items-center max-w-2xl w-full"
-                    >
-                        {/* BIG SOLD TEXT */}
-                        <h1 className="text-7xl md:text-9xl font-black italic tracking-tighter uppercase mb-6 animate-shine drop-shadow-[0_0_40px_rgba(255,255,255,0.4)]">
+                <div className="fixed inset-0 z-[100] bg-minimal-sold/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none">
+                    <div className="max-w-2xl w-full flex flex-col items-center">
+                        {/* SOLD TITLE */}
+                        <h1 className="text-8xl md:text-9xl text-sold-title mb-8">
                             SOLD
                         </h1>
 
-                        {/* Team Logo Circle */}
-                        <motion.div 
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-yellow-500 p-1.5 bg-gray-900 shadow-[0_0_30px_rgba(234,179,8,0.4)] mb-8 flex items-center justify-center overflow-hidden animate-pulse-gold"
-                        >
-                            <div className="w-full h-full rounded-full bg-indigo-600 flex items-center justify-center text-4xl font-bold text-white uppercase overflow-hidden">
-                                {soldStatus.teamLogo ? (
-                                    <img src={soldStatus.teamLogo} alt={soldStatus.teamName} className="w-full h-full object-cover" />
-                                ) : (
-                                    soldStatus.teamName.charAt(0)
-                                )}
-                            </div>
-                        </motion.div>
-
-                        {/* SOLD TO TEAM NAME */}
-                        <motion.div 
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.6 }}
-                            className="mb-4"
-                        >
-                            <p className="text-xl md:text-3xl font-bold uppercase tracking-[0.4em] text-white/70 mb-2">
-                                SIGNED BY
+                        <div className="space-y-4 mb-16">
+                            {/* TEAM NAME */}
+                            <p className="text-2xl md:text-3xl font-medium text-white/80">
+                                Signed by <span className="text-white font-bold">{soldStatus.teamName}</span>
                             </p>
-                            <h2 className="text-4xl md:text-6xl font-black uppercase text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
-                                {soldStatus.teamName}
-                            </h2>
-                        </motion.div>
 
-                        {/* Final Price */}
-                        <motion.div 
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.8 }}
-                            className="mb-10"
-                        >
-                            <p className="text-4xl md:text-7xl font-mono font-black text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]">
-                                ₹{soldStatus.price.toLocaleString()}
+                            {/* FINAL PRICE */}
+                            <p className="text-3xl md:text-4xl">
+                                <span className="text-white/60 font-medium">Final Price:</span> 
+                                <span className="text-amount ml-3">₹{soldStatus.price.toLocaleString()}</span>
                             </p>
-                        </motion.div>
+                        </div>
 
-                        {/* Auction Closed Badge */}
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 1.2 }}
-                            className="px-6 py-2 bg-white/5 border border-white/10 rounded-full backdrop-blur-sm"
+                        {/* NEXT PLAYER BUTTON */}
+                        <button 
+                            onClick={() => {
+                                setSoldStatus(null);
+                                setActiveAuction(null);
+                                if (role === 'admin') navigate('/admin/dashboard');
+                            }}
+                            className="btn-minimal"
                         >
-                            <span className="text-sm font-black uppercase tracking-[0.5em] text-gray-500">
-                                Auction Closed
-                            </span>
-                        </motion.div>
-                    </motion.div>
-                </motion.div>
+                            Next Player
+                        </button>
+                    </div>
+                </div>
             )}
         </AnimatePresence>
 
