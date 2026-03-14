@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Environment variables
 .env
@@ -8,11 +7,37 @@ package-lock.json
 .env.development.local
 .env.test.local
 .env.production.local
+*.env
 
 # Builds
 build/
 dist/
+dist-ssr/
+.vite/
+
+# User Uploads / Media
+uploads/
+backend/uploads/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Testing
+coverage/
