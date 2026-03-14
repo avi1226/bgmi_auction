@@ -41,3 +41,23 @@ Thumbs.db
 
 # Testing
 coverage/
+
+# Security / Secrets
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+secrets.json
+firebase-credentials.json
+firebase-adminsdk.json
+credentials.json
+*.secret
+passwords.txt
+api_keys.txt
+
+# Database Seed and Setup (contains plain text dummy passwords)
+backend/seed.js
+backend/seed_mongo.js
+backend/setup_db.sql
+backend/schema.sql
