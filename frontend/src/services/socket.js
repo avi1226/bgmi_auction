@@ -1,7 +1,6 @@
 import { io } from 'socket.io-client';
 
-// Hardcoded for stability
-const socket = io('http://localhost:5006', {
+const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5006', {
   autoConnect: false,
 });
 
